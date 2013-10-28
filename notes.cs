@@ -21,12 +21,12 @@ public class notes : MonoBehaviour
             
             GUI.EndScrollView();
             
-            if (GUI.Button(new Rect(50f, 413F, 42f, 30f), "Save"))
+            if (GUI.Button(new Rect(50f, 413f, 42f, 30f), "Save"))
             {
                 KSP.IO.File.WriteAllText<notes>(_text, _file);
             }
             
-            if (GUI.Button(new Rect(420f, 15F, 10f, 10f), ""))
+            if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
             {
                 _visible = false;
             }
@@ -34,7 +34,7 @@ public class notes : MonoBehaviour
         
         if (_visible == false)
         {
-            if (GUI.Button(new Rect(420f, 15F, 10f, 10f), ""))
+            if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
             {
                 _visible = true;
             }
