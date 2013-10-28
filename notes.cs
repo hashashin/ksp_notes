@@ -29,13 +29,13 @@ using KSP.IO;
 [KSPAddon(KSPAddon.Startup.EveryScene, false)]
 public class notes : MonoBehaviour
 {
-    public Vector2 scrollViewVector = Vector2.zero;
-    public static string _file
+    private Vector2 scrollViewVector = Vector2.zero;
+    private static string _file
     {
         get { return KSPUtil.ApplicationRootPath + "GameData/notes/Plugins/PluginData/notes.txt"; }
     }
-    public string _text = KSP.IO.File.ReadAllText<notes>(_file);
-    public bool _visible = false;
+    private string _text = KSP.IO.File.ReadAllText<notes>(_file);
+    private bool _visible = false;
     
     void OnGUI()
     {
