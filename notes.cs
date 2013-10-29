@@ -39,16 +39,16 @@ public class notes : MonoBehaviour
     private bool _visible = false;
     private string _file = "notes.txt";
 
+
     private void OnGUI()
     {
         DontDestroyOnLoad(this);
         if (_visible)
         {
-            scrollViewVector = GUI.BeginScrollView(new Rect(50f, 25f, 390f, 390f), scrollViewVector, new Rect(0f, 0f, 400f, 600f));
-            _text = GUI.TextArea(new Rect(0f, 0f, 400f, 600f), _text);
-
+            scrollViewVector = GUI.BeginScrollView(new Rect(50f, 25f, 420f, 380f), scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
+            _text = GUI.TextArea(new Rect(0f, 0f, 400f, 4360f), _text);
             GUI.EndScrollView();
-
+            
             _file = GUI.TextField(new Rect(100f, 413f, 60f, 30f), _file);
 
             if (GUI.Button(new Rect(160f, 413f, 80f, 30f), "Save"))
