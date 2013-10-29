@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs
+// notes.cs 0.2.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2013 Iván Atienza
@@ -39,20 +39,21 @@ public class notes : MonoBehaviour
     private bool _visible = false;
     private string _file = "notes.txt";
 
-    void OnGUI()
+    private void OnGUI()
     {
+        DontDestroyOnLoad(this);
         if (_visible)
         {
             scrollViewVector = GUI.BeginScrollView(new Rect(50f, 25f, 390f, 390f), scrollViewVector, new Rect(0f, 0f, 400f, 600f));
             _text = GUI.TextArea(new Rect(0f, 0f, 400f, 600f), _text);
-            
+
             GUI.EndScrollView();
-            
-            _file = GUI.TextField (new Rect (100f, 413f, 60f, 30f), _file);
-            
+
+            _file = GUI.TextField(new Rect(100f, 413f, 60f, 30f), _file);
+
             if (GUI.Button(new Rect(160f, 413f, 80f, 30f), "Save"))
             {
-               KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
+                KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
             }
 
             if (GUI.Button(new Rect(240f, 413f, 80f, 30f), "Load"))
@@ -66,14 +67,15 @@ public class notes : MonoBehaviour
                 {
                     print("[notes.dll] this file dont exist: " + _file);
                 }
-            }            
-            
+            }
+
             if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
             {
+                KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
                 _visible = false;
             }
         }
-        
+
         else
         {
             if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
@@ -81,5 +83,11 @@ public class notes : MonoBehaviour
                 _visible = true;
             }
         }
+    }
+    
+    private void OnDestroy()
+    {
+        KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
+        Destroy(this);
     }
 }
