@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs 0.2.1
+// notes.cs 0.3
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2013 Iván Atienza
@@ -30,64 +30,70 @@ using KSP.IO;
 public class notes : MonoBehaviour
 {
     private Vector2 scrollViewVector = Vector2.zero;
+    private static string _configfile = "notes.cfg";
     private static string _notesdir = "GameData/notes/Plugins/PluginData/";
-    private static string _note
-    {
-        get { return KSPUtil.ApplicationRootPath + _notesdir + "notes.txt"; }
-    }
-    private string _text = KSP.IO.File.ReadAllText<notes>(_note);
+    private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
+    private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
     private bool _visible = false;
-    private string _file = "notes.txt";
-
 
     private void OnGUI()
     {
-        DontDestroyOnLoad(this);
         if (_visible)
         {
             scrollViewVector = GUI.BeginScrollView(new Rect(50f, 25f, 420f, 380f), scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
             _text = GUI.TextArea(new Rect(0f, 0f, 400f, 4360f), _text);
             GUI.EndScrollView();
-            
-            _file = GUI.TextField(new Rect(100f, 413f, 60f, 30f), _file);
 
-            if (GUI.Button(new Rect(160f, 413f, 80f, 30f), "Save"))
+            _file = GUI.TextField(new Rect(60f, 413f, 100f, 20f), _file);
+
+            if (GUI.Button(new Rect(160f, 413f, 80f, 30f), "Open"))
             {
-                KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
+                Load();
             }
 
-            if (GUI.Button(new Rect(240f, 413f, 80f, 30f), "Load"))
+            if (GUI.Button(new Rect(240f, 413f, 80f, 30f), "Save"))
             {
-
-                if (KSP.IO.File.Exists<notes>(_file) == true)
-                {
-                    _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file);
-                }
-                else
-                {
-                    print("[notes.dll] this file dont exist: " + _file);
-                }
-            }
-
-            if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
-            {
-                KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
-                _visible = false;
-            }
-        }
-
-        else
-        {
-            if (GUI.Button(new Rect(420f, 15f, 10f, 10f), ""))
-            {
-                _visible = true;
+                Save();
             }
         }
     }
-    
-    private void OnDestroy()
+
+    void Update()
     {
-        KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file);
-        Destroy(this);
+        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
+        {
+            if (_visible == true)
+            {
+                _visible = false;
+            }
+            else
+            {
+                _visible = true;
+            }
+
+        }
+    }
+    
+    void OnDestroy()
+    {
+        Save();
+    }
+    
+    private void Save()
+    {
+        File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
+        File.WriteAllText<notes>(_file, _notesdir + _configfile);
+    }
+    
+    private void Load()
+    {
+        if (File.Exists<notes>(_file + ".txt") == true)
+        {
+            _text = File.ReadAllText<notes>(_notesdir + _file + ".txt" );
+        }
+        else
+        {
+            print("[notes.dll] this file dont exist: " + _file + ".txt");
+        }
     }
 }
