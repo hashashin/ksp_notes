@@ -36,9 +36,18 @@ public class notes : MonoBehaviour
     private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
     private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
     private bool _visible = false;
-    private Rect _windowRect = new Rect(50f, 25f, 425f, 440f);
+    private Rect _windowRect;
     private IButton _button;
 
+    private void Awake()
+    {
+        LoadSettings();
+        if (_windowRect == new Rect(0, 0, 0, 0))
+        {
+            _windowRect = new Rect(50f, 25f, 425f, 440f);
+        }
+    }
+    
     private void OnGUI()
     {
         _button = ToolbarManager.Instance.add("notes", "toggle");
@@ -100,6 +109,7 @@ public class notes : MonoBehaviour
     void OnDestroy()
     {
         Save();
+        SaveSettings();
     }
 
     private void Save()
@@ -118,5 +128,26 @@ public class notes : MonoBehaviour
         {
             print("[notes.dll] this file dont exist: " + _file + ".txt");
         }
+    }
+    
+    private void LoadSettings()
+    {
+        print("[notes.dll] Loading Config...");
+        KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+        configfile.load();
+        //Actual settings
+        _windowRect = configfile.GetValue<Rect>("windowpos");
+        print("[notes.dll] Config Loaded Successfully");
+    }
+    
+    private void SaveSettings()
+    {
+        print("[notes.dll] Saving Config...");
+        KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+        
+        configfile.SetValue("windowpos", _windowRect);
+        
+        configfile.save();
+        print("[notes.dll] Saved Config");
     }
 }
