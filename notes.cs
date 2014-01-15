@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs 0.3.1
+// notes.cs 0.4
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2013 Iván Atienza
@@ -25,46 +25,62 @@
 
 using UnityEngine;
 using KSP.IO;
+using Toolbar;
 
 [KSPAddon(KSPAddon.Startup.EveryScene, false)]
 public class notes : MonoBehaviour
 {
-    private Vector2 scrollViewVector = Vector2.zero;
+    private Vector2 _scrollViewVector = Vector2.zero;
     private static string _configfile = "notes.cfg";
-    private static string _notesdir = "GameData/notes/Plugins/PluginData/";
+    private static string _notesdir = "notes/Plugins/PluginData/";
     private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
     private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
     private bool _visible = false;
     private Rect _windowRect = new Rect(50f, 25f, 425f, 440f);
+    private IButton _button;
 
     private void OnGUI()
     {
+        _button = ToolbarManager.Instance.add("notes", "toggle");
+        _button.TexturePath = "notes/icon";
+        _button.ToolTip = "Notes plugin";
+        _button.OnClick += (e) =>
+        {
+            if (_visible == true)
+            {
+                _visible = false;
+            }
+            else
+            {
+                _visible = true;
+            }
+        };
         if (_visible)
         {
-            _windowRect = GUI.Window (0, _windowRect, DoMyWindow, "Notes");
+            _windowRect = GUI.Window(0, _windowRect, DoMyWindow, "Notes");
         }
     }
-    
+
     private void DoMyWindow(int windowID)
     {
-            scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-            _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
-            GUI.EndScrollView();
-            
-            _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
+        _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
+        _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
+        GUI.EndScrollView();
 
-            if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
-            {
-                Load();
-            }
+        _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
 
-            if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
-            {
-                Save();
-            }
-            GUI.DragWindow();
+        if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
+        {
+            Load();
+        }
+
+        if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
+        {
+            Save();
+        }
+        GUI.DragWindow();
     }
-    
+
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
