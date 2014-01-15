@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs 0.3
+// notes.cs 0.3.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2013 Iván Atienza
@@ -35,29 +35,36 @@ public class notes : MonoBehaviour
     private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
     private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
     private bool _visible = false;
+    private Rect _windowRect = new Rect(50f, 25f, 425f, 440f);
 
     private void OnGUI()
     {
         if (_visible)
         {
-            scrollViewVector = GUI.BeginScrollView(new Rect(50f, 25f, 420f, 380f), scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-            _text = GUI.TextArea(new Rect(0f, 0f, 400f, 4360f), _text);
+            _windowRect = GUI.Window (0, _windowRect, DoMyWindow, "Notes");
+        }
+    }
+    
+    private void DoMyWindow(int windowID)
+    {
+            scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
+            _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
             GUI.EndScrollView();
+            
+            _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
 
-            _file = GUI.TextField(new Rect(60f, 413f, 100f, 20f), _file);
-
-            if (GUI.Button(new Rect(160f, 413f, 80f, 30f), "Open"))
+            if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
             {
                 Load();
             }
 
-            if (GUI.Button(new Rect(240f, 413f, 80f, 30f), "Save"))
+            if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
             {
                 Save();
             }
-        }
+            GUI.DragWindow();
     }
-
+    
     void Update()
     {
         if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
@@ -73,23 +80,23 @@ public class notes : MonoBehaviour
 
         }
     }
-    
+
     void OnDestroy()
     {
         Save();
     }
-    
+
     private void Save()
     {
         File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
         File.WriteAllText<notes>(_file, _notesdir + _configfile);
     }
-    
+
     private void Load()
     {
         if (File.Exists<notes>(_file + ".txt") == true)
         {
-            _text = File.ReadAllText<notes>(_notesdir + _file + ".txt" );
+            _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
         }
         else
         {
