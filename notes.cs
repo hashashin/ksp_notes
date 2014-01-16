@@ -88,11 +88,11 @@ namespace notes
             }
             if (_visible)
             {
-                _windowRect = GUI.Window(0, _windowRect, DoMyWindow, "Notes");
+                _windowRect = GUI.Window(999999, _windowRect, DoMyWindow, "Notes");
             }
             if (_popup)
             {
-                _windowRect2 = GUI.Window(1, _windowRect2, Listnotes, "Notes list");
+                _windowRect2 = GUI.Window(999998, _windowRect2, Listnotes, "Notes list");
             }
         }
 
