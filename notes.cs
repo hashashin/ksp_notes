@@ -25,6 +25,8 @@
 
 using UnityEngine;
 using KSP.IO;
+using System.IO;
+using System.Collections.Generic;
 
 namespace notes
 {
@@ -32,13 +34,20 @@ namespace notes
     public class notes : MonoBehaviour
     {
         private Vector2 _scrollViewVector = Vector2.zero;
+        private Vector2 _scrollViewVector2 = Vector2.zero;
         private static string _configfile = "notes.cfg";
         private static string _notesdir = "notes/Plugins/PluginData/";
-        private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
-        private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
+        private static string _file = KSP.IO.File.ReadAllText<notes>(_notesdir + _configfile);
+        private string _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
         private bool _visible = false;
         private Rect _windowRect;
+        private Rect _windowRect2;
         private ToolbarButtonWrapper _button;
+        private string _keybind;
+        private bool _popup = false;
+        private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
+        private List<string> fileNames;
+        private string _dirOutputString = "";
 
         public void Awake()
         {
@@ -46,6 +55,14 @@ namespace notes
             if (_windowRect == new Rect(0, 0, 0, 0))
             {
                 _windowRect = new Rect(50f, 25f, 425f, 440f);
+            }
+            if (_windowRect2 == new Rect(0, 0, 0, 0))
+            {
+                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 310f, 405f);
+            }
+            if (_keybind == null)
+            {
+                _keybind = "n";
             }
         }
 
@@ -61,6 +78,7 @@ namespace notes
                     if (_visible == true)
                     {
                         _visible = false;
+                        _popup = false;
                     }
                     else
                     {
@@ -72,12 +90,29 @@ namespace notes
             {
                 _windowRect = GUI.Window(0, _windowRect, DoMyWindow, "Notes");
             }
+            if (_popup)
+            {
+                _windowRect2 = GUI.Window(1, _windowRect2, Listnotes, "Notes list");
+            }
+        }
+
+        public void Listnotes(int windowID)
+        {
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 300f, 350f), _scrollViewVector2, new Rect(0f, 0f, 200f, 4360f));
+            GUI.Label(new Rect(0f, 0f, 285f, 4360f), _dirOutputString, "textfield");
+            GUI.EndScrollView();
+            if (GUI.Button(new Rect(5f, 370f, 80f, 30f), "OK"))
+            {
+                _dirOutputString = "";
+                _popup = false;
+            }
+            GUI.DragWindow();
         }
 
         public void DoMyWindow(int windowID)
         {
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-            _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
+            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 4360f), _text);
             GUI.EndScrollView();
 
             _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
@@ -91,16 +126,31 @@ namespace notes
             {
                 Save();
             }
+            if (GUI.Button(new Rect(265f, 400f, 80f, 30f), "List Notes"))
+            {
+                if (_dirOutputString == "")
+                {
+                    this.fileNames = new System.Collections.Generic.List<string>(Directory.GetFiles(_mypath, "*.txt"));
+
+                    for (int i = 0; i < this.fileNames.Count; i++)
+                    {
+                        this.fileNames[i] = Path.GetFileName(this.fileNames[i]);
+                        this._dirOutputString += i.ToString("D5") + "\t-\t" + this.fileNames[i] + "\n";
+                    }
+                }
+                _popup = true;
+            }
             GUI.DragWindow();
         }
 
         void Update()
         {
-            if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
+            if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
             {
                 if (_visible == true)
                 {
                     _visible = false;
+                    _popup = false;
                 }
                 else
                 {
@@ -118,15 +168,15 @@ namespace notes
 
         private void Save()
         {
-            File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
-            File.WriteAllText<notes>(_file, _notesdir + _configfile);
+            KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
+            KSP.IO.File.WriteAllText<notes>(_file, _notesdir + _configfile);
         }
 
         private void Load()
         {
-            if (File.Exists<notes>(_file + ".txt") == true)
+            if (KSP.IO.File.Exists<notes>(_file + ".txt") == true)
             {
-                _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
+                _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
             }
             else
             {
@@ -139,8 +189,10 @@ namespace notes
             print("[notes.dll] Loading Config...");
             KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
             configfile.load();
-            //Actual settings
+
             _windowRect = configfile.GetValue<Rect>("windowpos");
+            _windowRect2 = configfile.GetValue<Rect>("listwindowpos");
+            _keybind = configfile.GetValue<string>("keybind");
             print("[notes.dll] Config Loaded Successfully");
         }
 
@@ -150,9 +202,11 @@ namespace notes
             KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
 
             configfile.SetValue("windowpos", _windowRect);
+            configfile.SetValue("listwindowpos", _windowRect2);
+            configfile.SetValue("keybind", _keybind);
 
             configfile.save();
-            print("[notes.dll] Saved Config");
+            print("[notes.dll] Config Saved ");
         }
     }
 }
