@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs 0.4
+// notes.cs 0.4.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -25,129 +25,134 @@
 
 using UnityEngine;
 using KSP.IO;
-using Toolbar;
 
-[KSPAddon(KSPAddon.Startup.EveryScene, false)]
-public class notes : MonoBehaviour
+namespace notes
 {
-    private Vector2 _scrollViewVector = Vector2.zero;
-    private static string _configfile = "notes.cfg";
-    private static string _notesdir = "notes/Plugins/PluginData/";
-    private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
-    private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
-    private bool _visible = false;
-    private Rect _windowRect;
-    private IButton _button;
+    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    public class notes : MonoBehaviour
+    {
+        private Vector2 _scrollViewVector = Vector2.zero;
+        private static string _configfile = "notes.cfg";
+        private static string _notesdir = "notes/Plugins/PluginData/";
+        private static string _file = File.ReadAllText<notes>(_notesdir + _configfile);
+        private string _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
+        private bool _visible = false;
+        private Rect _windowRect;
+        private ToolbarButtonWrapper _button;
 
-    private void Awake()
-    {
-        LoadSettings();
-        if (_windowRect == new Rect(0, 0, 0, 0))
+        public void Awake()
         {
-            _windowRect = new Rect(50f, 25f, 425f, 440f);
-        }
-    }
-    
-    private void OnGUI()
-    {
-        _button = ToolbarManager.Instance.add("notes", "toggle");
-        _button.TexturePath = "notes/icon";
-        _button.ToolTip = "Notes plugin";
-        _button.OnClick += (e) =>
-        {
-            if (_visible == true)
+            LoadSettings();
+            if (_windowRect == new Rect(0, 0, 0, 0))
             {
-                _visible = false;
+                _windowRect = new Rect(50f, 25f, 425f, 440f);
             }
-            else
+        }
+
+        public void OnGUI()
+        {
+            if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
-                _visible = true;
+                _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
+                _button.TexturePath = "notes/icon";
+                _button.ToolTip = "Notes plugin";
+                _button.AddButtonClickHandler((e) =>
+                {
+                    if (_visible == true)
+                    {
+                        _visible = false;
+                    }
+                    else
+                    {
+                        _visible = true;
+                    }
+                });
             }
-        };
-        if (_visible)
-        {
-            _windowRect = GUI.Window(0, _windowRect, DoMyWindow, "Notes");
-        }
-    }
-
-    private void DoMyWindow(int windowID)
-    {
-        _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-        _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
-        GUI.EndScrollView();
-
-        _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
-
-        if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
-        {
-            Load();
+            if (_visible)
+            {
+                _windowRect = GUI.Window(0, _windowRect, DoMyWindow, "Notes");
+            }
         }
 
-        if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
+        public void DoMyWindow(int windowID)
+        {
+            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
+            _text = GUI.TextArea(new Rect(5f, 0f, 400f, 4360f), _text);
+            GUI.EndScrollView();
+
+            _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
+
+            if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
+            {
+                Load();
+            }
+
+            if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
+            {
+                Save();
+            }
+            GUI.DragWindow();
+        }
+
+        void Update()
+        {
+            if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
+            {
+                if (_visible == true)
+                {
+                    _visible = false;
+                }
+                else
+                {
+                    _visible = true;
+                }
+
+            }
+        }
+
+        void OnDestroy()
         {
             Save();
+            SaveSettings();
         }
-        GUI.DragWindow();
-    }
 
-    void Update()
-    {
-        if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown("n"))
+        private void Save()
         {
-            if (_visible == true)
+            File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
+            File.WriteAllText<notes>(_file, _notesdir + _configfile);
+        }
+
+        private void Load()
+        {
+            if (File.Exists<notes>(_file + ".txt") == true)
             {
-                _visible = false;
+                _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
             }
             else
             {
-                _visible = true;
+                print("[notes.dll] this file dont exist: " + _file + ".txt");
             }
-
         }
-    }
 
-    void OnDestroy()
-    {
-        Save();
-        SaveSettings();
-    }
-
-    private void Save()
-    {
-        File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
-        File.WriteAllText<notes>(_file, _notesdir + _configfile);
-    }
-
-    private void Load()
-    {
-        if (File.Exists<notes>(_file + ".txt") == true)
+        private void LoadSettings()
         {
-            _text = File.ReadAllText<notes>(_notesdir + _file + ".txt");
+            print("[notes.dll] Loading Config...");
+            KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+            configfile.load();
+            //Actual settings
+            _windowRect = configfile.GetValue<Rect>("windowpos");
+            print("[notes.dll] Config Loaded Successfully");
         }
-        else
+
+        private void SaveSettings()
         {
-            print("[notes.dll] this file dont exist: " + _file + ".txt");
+            print("[notes.dll] Saving Config...");
+            KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+
+            configfile.SetValue("windowpos", _windowRect);
+
+            configfile.save();
+            print("[notes.dll] Saved Config");
         }
-    }
-    
-    private void LoadSettings()
-    {
-        print("[notes.dll] Loading Config...");
-        KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
-        configfile.load();
-        //Actual settings
-        _windowRect = configfile.GetValue<Rect>("windowpos");
-        print("[notes.dll] Config Loaded Successfully");
-    }
-    
-    private void SaveSettings()
-    {
-        print("[notes.dll] Saving Config...");
-        KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
-        
-        configfile.SetValue("windowpos", _windowRect);
-        
-        configfile.save();
-        print("[notes.dll] Saved Config");
     }
 }
