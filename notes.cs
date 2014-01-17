@@ -47,7 +47,7 @@ namespace notes
         private bool _popup = false;
         private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
         private List<string> _filenames;
-        private string _dirOutputString;
+        public int _selectiongridint = 0;
 
         public void Awake()
         {
@@ -79,13 +79,23 @@ namespace notes
 
         public void Listnotes(int windowID)
         {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 252f, 300f), _scrollViewVector2, new Rect(0f, 0f, 300f, 4360f));
-            GUI.Label(new Rect(0f, 0f, 300f, 4360f), _dirOutputString, "textfield");
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
+            _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
             GUI.EndScrollView();
-            if (GUI.Button(new Rect(5f, 320f, 80f, 30f), "OK"))
+            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Select & Load"))
             {
-                _dirOutputString = null;
+                _file = _filenames[_selectiongridint];
+                Load();
+                _filenames = null;
                 _popup = false;
+            }
+            if (GUI.Button(new Rect(105f, 320f, 100f, 30f), "Delete"))
+            {
+                Delete();
+                _filenames = null;
+                _popup = false;
+                GetNotes();
+                _popup = true;
             }
             GUI.DragWindow();
         }
@@ -96,27 +106,27 @@ namespace notes
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 4360f), _text);
             GUI.EndScrollView();
 
-            _file = GUI.TextField(new Rect(5f, 400f, 100f, 20f), _file);
+            _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
 
-            if (GUI.Button(new Rect(105f, 400f, 80f, 30f), "Open"))
+            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Open"))
             {
                 Load();
             }
 
-            if (GUI.Button(new Rect(185f, 400f, 80f, 30f), "Save"))
+            if (GUI.Button(new Rect(235f, 400f, 80f, 30f), "Save"))
             {
                 Save();
             }
-            if (GUI.Button(new Rect(265f, 400f, 80f, 30f), "List Notes"))
+            if (GUI.Button(new Rect(315f, 400f, 80f, 30f), "List Notes"))
             {
-                if (_dirOutputString == null)
+                if (_filenames == null)
                 {
                     GetNotes();
                     _popup = true;
                 }
                 else
                 {
-                    _dirOutputString = null;
+                    _filenames = null;
                     _popup = false;
                 }
             }
@@ -159,6 +169,11 @@ namespace notes
             }
         }
 
+        private void Delete()
+        {
+            KSP.IO.File.Delete<notes>(_filenames[_selectiongridint] + ".txt");
+        }
+
         private void LoadSettings()
         {
             KSPLog.print("[notes.dll] Loading Config...");
@@ -189,7 +204,7 @@ namespace notes
             if (_visible == true)
             {
                 _visible = false;
-                _dirOutputString = null;
+                _filenames = null;
                 _popup = false;
             }
             else
@@ -205,7 +220,6 @@ namespace notes
             for (int i = 0; i < this._filenames.Count; i++)
             {
                 this._filenames[i] = Path.GetFileNameWithoutExtension(this._filenames[i]);
-                this._dirOutputString += "-\t" + this._filenames[i] + "\n";
             }
         }
 
