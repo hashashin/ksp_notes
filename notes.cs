@@ -89,13 +89,21 @@ namespace notes
                 _filenames = null;
                 _popup = false;
             }
-            if (GUI.Button(new Rect(105f, 320f, 100f, 30f), "Delete"))
+            if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
             {
                 Delete();
                 _filenames = null;
                 _popup = false;
                 GetNotes();
                 _popup = true;
+            }
+            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
+            {
+                if (_popup)
+                {
+                    _filenames = null;
+                    _popup = false;
+                }
             }
             GUI.DragWindow();
         }
