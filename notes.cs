@@ -1,5 +1,5 @@
 // -------------------------------------------------------------------------------------------------
-// notes.cs 0.5
+// notes.cs 0.5.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -35,7 +35,7 @@ namespace notes
     {
         private Vector2 _scrollViewVector = Vector2.zero;
         private Vector2 _scrollViewVector2 = Vector2.zero;
-        private static string _configfile = "notes.cfg";
+        private static string _configfile = "notes.dat";
         private static string _notesdir = "notes/Plugins/PluginData/";
         private static string _file = KSP.IO.File.ReadAllText<notes>(_notesdir + _configfile);
         private string _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
@@ -46,24 +46,13 @@ namespace notes
         private string _keybind;
         private bool _popup = false;
         private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
-        private List<string> fileNames;
-        private string _dirOutputString = "";
+        private List<string> _filenames;
+        private string _dirOutputString;
 
         public void Awake()
         {
             LoadSettings();
-            if (_windowRect == new Rect(0, 0, 0, 0))
-            {
-                _windowRect = new Rect(50f, 25f, 425f, 440f);
-            }
-            if (_windowRect2 == new Rect(0, 0, 0, 0))
-            {
-                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 310f, 405f);
-            }
-            if (_keybind == null)
-            {
-                _keybind = "n";
-            }
+            CheckDefaults();
         }
 
         public void OnGUI()
@@ -71,19 +60,11 @@ namespace notes
             if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
                 _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
-                _button.TexturePath = "notes/icon";
+                _button.TexturePath = "notes/Textures/icon";
                 _button.ToolTip = "Notes plugin";
                 _button.AddButtonClickHandler((e) =>
                 {
-                    if (_visible == true)
-                    {
-                        _visible = false;
-                        _popup = false;
-                    }
-                    else
-                    {
-                        _visible = true;
-                    }
+                    Toggle();
                 });
             }
             if (_visible)
@@ -98,12 +79,12 @@ namespace notes
 
         public void Listnotes(int windowID)
         {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 300f, 350f), _scrollViewVector2, new Rect(0f, 0f, 200f, 4360f));
-            GUI.Label(new Rect(0f, 0f, 285f, 4360f), _dirOutputString, "textfield");
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 252f, 300f), _scrollViewVector2, new Rect(0f, 0f, 300f, 4360f));
+            GUI.Label(new Rect(0f, 0f, 300f, 4360f), _dirOutputString, "textfield");
             GUI.EndScrollView();
-            if (GUI.Button(new Rect(5f, 370f, 80f, 30f), "OK"))
+            if (GUI.Button(new Rect(5f, 320f, 80f, 30f), "OK"))
             {
-                _dirOutputString = "";
+                _dirOutputString = null;
                 _popup = false;
             }
             GUI.DragWindow();
@@ -128,17 +109,20 @@ namespace notes
             }
             if (GUI.Button(new Rect(265f, 400f, 80f, 30f), "List Notes"))
             {
-                if (_dirOutputString == "")
+                if (_dirOutputString == null)
                 {
-                    this.fileNames = new System.Collections.Generic.List<string>(Directory.GetFiles(_mypath, "*.txt"));
-
-                    for (int i = 0; i < this.fileNames.Count; i++)
-                    {
-                        this.fileNames[i] = Path.GetFileName(this.fileNames[i]);
-                        this._dirOutputString += i.ToString("D5") + "\t-\t" + this.fileNames[i] + "\n";
-                    }
+                    GetNotes();
+                    _popup = true;
                 }
-                _popup = true;
+                else
+                {
+                    _dirOutputString = null;
+                    _popup = false;
+                }
+            }
+            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
+            {
+                Toggle();
             }
             GUI.DragWindow();
         }
@@ -147,16 +131,7 @@ namespace notes
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
             {
-                if (_visible == true)
-                {
-                    _visible = false;
-                    _popup = false;
-                }
-                else
-                {
-                    _visible = true;
-                }
-
+                Toggle();
             }
         }
 
@@ -174,31 +149,31 @@ namespace notes
 
         private void Load()
         {
-            if (KSP.IO.File.Exists<notes>(_file + ".txt") == true)
+            if (KSP.IO.File.Exists<notes>(_file + ".txt"))
             {
                 _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
             }
             else
             {
-                print("[notes.dll] this file dont exist: " + _file + ".txt");
+                ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 4f, ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
         private void LoadSettings()
         {
-            print("[notes.dll] Loading Config...");
+            KSPLog.print("[notes.dll] Loading Config...");
             KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
             configfile.load();
 
             _windowRect = configfile.GetValue<Rect>("windowpos");
             _windowRect2 = configfile.GetValue<Rect>("listwindowpos");
             _keybind = configfile.GetValue<string>("keybind");
-            print("[notes.dll] Config Loaded Successfully");
+            KSPLog.print("[notes.dll] Config Loaded Successfully");
         }
 
         private void SaveSettings()
         {
-            print("[notes.dll] Saving Config...");
+            KSPLog.print("[notes.dll] Saving Config...");
             KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
 
             configfile.SetValue("windowpos", _windowRect);
@@ -206,7 +181,48 @@ namespace notes
             configfile.SetValue("keybind", _keybind);
 
             configfile.save();
-            print("[notes.dll] Config Saved ");
+            KSPLog.print("[notes.dll] Config Saved ");
+        }
+
+        private void Toggle()
+        {
+            if (_visible == true)
+            {
+                _visible = false;
+                _dirOutputString = null;
+                _popup = false;
+            }
+            else
+            {
+                _visible = true;
+            }
+        }
+
+        private void GetNotes()
+        {
+            this._filenames = new List<string>(Directory.GetFiles(_mypath, "*.txt"));
+
+            for (int i = 0; i < this._filenames.Count; i++)
+            {
+                this._filenames[i] = Path.GetFileNameWithoutExtension(this._filenames[i]);
+                this._dirOutputString += "-\t" + this._filenames[i] + "\n";
+            }
+        }
+
+        private void CheckDefaults()
+        {
+            if (_windowRect == new Rect(0, 0, 0, 0))
+            {
+                _windowRect = new Rect(50f, 25f, 425f, 440f);
+            }
+            if (_windowRect2 == new Rect(0, 0, 0, 0))
+            {
+                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 260f, 355f);
+            }
+            if (_keybind == null)
+            {
+                _keybind = "n";
+            }
         }
     }
 }
