@@ -69,11 +69,11 @@ namespace notes
             }
             if (_visible)
             {
-                _windowRect = GUI.Window(9999999, _windowRect, DoMyWindow, "Notes");
+                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, DoMyWindow, "Notes");
             }
             if (_popup)
             {
-                _windowRect2 = GUI.Window(9999998, _windowRect2, Listnotes, "Notes list");
+                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, Listnotes, "Notes list");
             }
         }
 
