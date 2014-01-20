@@ -1,5 +1,5 @@
-// -------------------------------------------------------------------------------------------------
-// notes.cs 0.6
+﻿// -------------------------------------------------------------------------------------------------
+// notes.cs 0.7
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -47,7 +47,7 @@ namespace notes
         private bool _popup = false;
         private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
         private List<string> _filenames;
-        public int _selectiongridint = 0;
+        private int _selectiongridint = 0;
 
         public void Awake()
         {
@@ -110,8 +110,8 @@ namespace notes
 
         public void DoMyWindow(int windowID)
         {
-            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 4360f), _text);
+            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
+            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text);
             GUI.EndScrollView();
 
             _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
