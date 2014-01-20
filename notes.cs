@@ -1,5 +1,5 @@
-// -------------------------------------------------------------------------------------------------
-// notes.cs 0.6
+﻿// -------------------------------------------------------------------------------------------------
+// notes.cs 0.7
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -23,10 +23,11 @@
 // -------------------------------------------------------------------------------------------------
 
 
-using UnityEngine;
-using KSP.IO;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using UnityEngine;
+
 
 namespace notes
 {
@@ -35,33 +36,64 @@ namespace notes
     {
         private Vector2 _scrollViewVector = Vector2.zero;
         private Vector2 _scrollViewVector2 = Vector2.zero;
+        private Rect _windowRect;
+        private Rect _windowRect2;
+
         private static string _configfile = "notes.dat";
         private static string _notesdir = "notes/Plugins/PluginData/";
         private static string _file = KSP.IO.File.ReadAllText<notes>(_notesdir + _configfile);
         private string _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
-        private bool _visible = false;
-        private Rect _windowRect;
-        private Rect _windowRect2;
-        private ToolbarButtonWrapper _button;
-        private string _keybind;
-        private bool _popup = false;
-        private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
-        private List<string> _filenames;
-        public int _selectiongridint = 0;
 
-        public void Awake()
+        private string _keybind;
+
+        private bool _popup = false;
+        private bool _visible = false;
+        private bool _toggledel = false;
+
+        private List<string> _filenames;
+        private int _selectiongridint = 0;
+        private static string _notes = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
+
+        private ToolbarButtonWrapper _button;
+        private string _tooltipon = "Hide Notepad";
+        private string _tooltipoff = "Show Notepad";
+        private string _btexture_on = "notes/Textures/icon_on";
+        private string _btexture_off = "notes/Textures/icon_off";
+
+        private static string _showbuttondeltext = "Show del button";
+        private static string _hidebuttondeltext = "Hide del button";
+        private string _currentdeltext;
+
+        private static string _reloadiconurl = "file://" + KSPUtil.ApplicationRootPath + "/Gamedata/notes/Textures/reload.png";
+        private WWW _reloadicontex = new WWW(_reloadiconurl);
+
+        private string _version;
+        private string _versionlastrun;
+
+
+        void Awake()
         {
+            LoadVersion();
+            VersionCheck();
             LoadSettings();
             CheckDefaults();
         }
 
-        public void OnGUI()
+        void OnGUI()
         {
             if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
                 _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
-                _button.TexturePath = "notes/Textures/icon";
-                _button.ToolTip = "Notes plugin";
+                if (_visible)
+                {
+                    _button.TexturePath = _btexture_on;
+                    _button.ToolTip = _tooltipon;
+                }
+                else
+                {
+                    _button.TexturePath = _btexture_off;
+                    _button.ToolTip = _tooltipoff;
+                }
                 _button.AddButtonClickHandler((e) =>
                 {
                     Toggle();
@@ -69,58 +101,27 @@ namespace notes
             }
             if (_visible)
             {
-                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, DoMyWindow, "Notes");
+                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, notesWindow, "Notepad");
             }
             if (_popup)
             {
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, Listnotes, "Notes list");
+                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, listWindow, "Notes list");
+                UpdateDelButtonText();
             }
         }
 
-        public void Listnotes(int windowID)
+        private void notesWindow(int windowID)
         {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
-            _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
-            GUI.EndScrollView();
-            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Select & Load"))
-            {
-                _file = _filenames[_selectiongridint];
-                Load();
-                _filenames = null;
-                _popup = false;
-            }
-            if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
-            {
-                Delete();
-                _filenames = null;
-                _popup = false;
-                GetNotes();
-                _popup = true;
-            }
-            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
-            {
-                if (_popup)
-                {
-                    _filenames = null;
-                    _popup = false;
-                }
-            }
-            GUI.DragWindow();
-        }
-
-        public void DoMyWindow(int windowID)
-        {
-            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 4360f));
-            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 4360f), _text);
+            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
+            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text);
             GUI.EndScrollView();
 
             _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
 
-            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Open"))
+            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Load"))
             {
                 Load();
             }
-
             if (GUI.Button(new Rect(235f, 400f, 80f, 30f), "Save"))
             {
                 Save();
@@ -145,6 +146,50 @@ namespace notes
             GUI.DragWindow();
         }
 
+        private void listWindow(int windowID)
+        {
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
+            _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
+            GUI.EndScrollView();
+            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Select & Load"))
+            {
+                _file = _filenames[_selectiongridint];
+                Load();
+                _filenames = null;
+                _popup = false;
+            }
+            GUI.DrawTexture(new Rect(115f, 320f, 30f, 30f), _reloadicontex.texture, ScaleMode.ScaleToFit, true, 0f);
+            if (GUI.Button(new Rect(115f, 320f, 30f, 30f), ""))
+            {
+                _filenames = null;
+                _popup = false;
+                GetNotes();
+                _popup = true;
+            }
+            if (_toggledel = GUI.Toggle(new Rect(75f, 350.5f, 115f, 20f), _toggledel, _currentdeltext))
+            {
+                GUI.contentColor = Color.red;
+                if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
+                {
+                    Delete();
+                    _filenames = null;
+                    _popup = false;
+                    GetNotes();
+                    _popup = true;
+                }
+                GUI.contentColor = Color.white;
+            }
+            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
+            {
+                if (_popup)
+                {
+                    _filenames = null;
+                    _popup = false;
+                }
+            }
+            GUI.DragWindow();
+        }
+
         void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
@@ -157,12 +202,20 @@ namespace notes
         {
             Save();
             SaveSettings();
+            if (_button != null)
+            {
+                _button.Destroy();
+            }
         }
 
         private void Save()
         {
             KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
             KSP.IO.File.WriteAllText<notes>(_file, _notesdir + _configfile);
+            if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
+            {
+                ScreenMessages.PostScreenMessage("File saved: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
+            }
         }
 
         private void Load()
@@ -171,15 +224,19 @@ namespace notes
             {
                 _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
             }
-            else
+            else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
-                ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 4f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
         private void Delete()
         {
             KSP.IO.File.Delete<notes>(_filenames[_selectiongridint] + ".txt");
+            if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
+            {
+                ScreenMessages.PostScreenMessage(_filenames[_selectiongridint] + ".txt DELETED!", 3f, ScreenMessageStyle.UPPER_CENTER);
+            }
         }
 
         private void LoadSettings()
@@ -191,6 +248,7 @@ namespace notes
             _windowRect = configfile.GetValue<Rect>("windowpos");
             _windowRect2 = configfile.GetValue<Rect>("listwindowpos");
             _keybind = configfile.GetValue<string>("keybind");
+            _versionlastrun = configfile.GetValue<string>("version");
             KSPLog.print("[notes.dll] Config Loaded Successfully");
         }
 
@@ -202,6 +260,7 @@ namespace notes
             configfile.SetValue("windowpos", _windowRect);
             configfile.SetValue("listwindowpos", _windowRect2);
             configfile.SetValue("keybind", _keybind);
+            configfile.SetValue("version", _version);
 
             configfile.save();
             KSPLog.print("[notes.dll] Config Saved ");
@@ -223,7 +282,7 @@ namespace notes
 
         private void GetNotes()
         {
-            this._filenames = new List<string>(Directory.GetFiles(_mypath, "*.txt"));
+            this._filenames = new List<string>(Directory.GetFiles(_notes, "*.txt"));
 
             for (int i = 0; i < this._filenames.Count; i++)
             {
@@ -239,11 +298,40 @@ namespace notes
             }
             if (_windowRect2 == new Rect(0, 0, 0, 0))
             {
-                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 260f, 355f);
+                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 260f, 370f);
             }
             if (_keybind == null)
             {
                 _keybind = "n";
+            }
+        }
+
+        private void VersionCheck()
+        {
+            _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            KSPLog.print("notes.dll version: " + _version);
+            if ((_version != _versionlastrun) && (KSP.IO.File.Exists<notes>("config.xml")))
+            {
+                KSP.IO.File.Delete<notes>("config.xml");
+            }
+        }
+
+        private void LoadVersion()
+        {
+            KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+            configfile.load();
+            _versionlastrun = configfile.GetValue<string>("version");
+        }
+
+        private void UpdateDelButtonText()
+        {
+            if (_toggledel)
+            {
+                _currentdeltext = _hidebuttondeltext;
+            }
+            else
+            {
+                _currentdeltext = _showbuttondeltext;
             }
         }
     }
