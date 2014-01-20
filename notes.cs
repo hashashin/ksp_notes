@@ -48,6 +48,7 @@ namespace notes
         private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
         private List<string> _filenames;
         private int _selectiongridint = 0;
+        private bool _toggledel = false;
 
         public void Awake()
         {
@@ -89,14 +90,19 @@ namespace notes
                 _filenames = null;
                 _popup = false;
             }
-            if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
+            GUI.contentColor = Color.red;
+            if (_toggledel = GUI.Toggle(new Rect(80f, 350.5f, 115f, 20f), _toggledel, "S/H delete button"))
             {
-                Delete();
-                _filenames = null;
-                _popup = false;
-                GetNotes();
-                _popup = true;
+                if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
+                {
+                    Delete();
+                    _filenames = null;
+                    _popup = false;
+                    GetNotes();
+                    _popup = true;
+                }
             }
+            GUI.contentColor = Color.white;
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 if (_popup)
@@ -239,7 +245,7 @@ namespace notes
             }
             if (_windowRect2 == new Rect(0, 0, 0, 0))
             {
-                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 260f, 355f);
+                _windowRect2 = new Rect((Screen.width / 2) - 150f, (Screen.height / 2) - 75f, 260f, 370f);
             }
             if (_keybind == null)
             {
