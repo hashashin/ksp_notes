@@ -23,11 +23,10 @@
 // -------------------------------------------------------------------------------------------------
 
 
-using UnityEngine;
-using KSP.IO;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Collections.Generic;
+using UnityEngine;
 
 
 namespace notes
@@ -56,16 +55,23 @@ namespace notes
         private static string _notes = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
 
         private ToolbarButtonWrapper _button;
-        private string _tooltipon = "Hide Notes plugin";
-        private string _tooltipoff = "Show Notes plugin";
+        private string _tooltipon = "Hide Notepad";
+        private string _tooltipoff = "Show Notepad";
         private string _btexture_on = "notes/Textures/icon_on";
         private string _btexture_off = "notes/Textures/icon_off";
+
+        private static string _showbuttondeltext = "Show del button";
+        private static string _hidebuttondeltext = "Hide del button";
+        private string _currentdeltext;
+
+        private static string _reloadiconurl = "file://" + KSPUtil.ApplicationRootPath + "/Gamedata/notes/Textures/reload.png";
+        private WWW _reloadicontex = new WWW(_reloadiconurl);
 
         private string _version;
         private string _versionlastrun;
 
 
-        public void Awake()
+        void Awake()
         {
             LoadVersion();
             VersionCheck();
@@ -73,7 +79,7 @@ namespace notes
             CheckDefaults();
         }
 
-        public void OnGUI()
+        void OnGUI()
         {
             if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
@@ -100,10 +106,11 @@ namespace notes
             if (_popup)
             {
                 _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, listWindow, "Notes list");
+                UpdateDelButtonText();
             }
         }
 
-        public void notesWindow(int windowID)
+        private void notesWindow(int windowID)
         {
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text);
@@ -111,11 +118,10 @@ namespace notes
 
             _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
 
-            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Open"))
+            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Load"))
             {
                 Load();
             }
-
             if (GUI.Button(new Rect(235f, 400f, 80f, 30f), "Save"))
             {
                 Save();
@@ -140,7 +146,7 @@ namespace notes
             GUI.DragWindow();
         }
 
-        public void listWindow(int windowID)
+        private void listWindow(int windowID)
         {
             _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
             _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
@@ -152,9 +158,17 @@ namespace notes
                 _filenames = null;
                 _popup = false;
             }
-            GUI.contentColor = Color.red;
-            if (_toggledel = GUI.Toggle(new Rect(80f, 350.5f, 115f, 20f), _toggledel, "S/H delete button"))
+            GUI.DrawTexture(new Rect(115f, 320f, 30f, 30f), _reloadicontex.texture, ScaleMode.ScaleToFit, true, 0f);
+            if (GUI.Button(new Rect(115f, 320f, 30f, 30f), ""))
             {
+                _filenames = null;
+                _popup = false;
+                GetNotes();
+                _popup = true;
+            }
+            if (_toggledel = GUI.Toggle(new Rect(75f, 350.5f, 115f, 20f), _toggledel, _currentdeltext))
+            {
+                GUI.contentColor = Color.red;
                 if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
                 {
                     Delete();
@@ -163,8 +177,8 @@ namespace notes
                     GetNotes();
                     _popup = true;
                 }
+                GUI.contentColor = Color.white;
             }
-            GUI.contentColor = Color.white;
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 if (_popup)
@@ -188,12 +202,20 @@ namespace notes
         {
             Save();
             SaveSettings();
+            if (_button != null)
+            {
+                _button.Destroy();
+            }
         }
 
         private void Save()
         {
             KSP.IO.File.WriteAllText<notes>(_text, _notesdir + _file + ".txt");
             KSP.IO.File.WriteAllText<notes>(_file, _notesdir + _configfile);
+            if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
+            {
+                ScreenMessages.PostScreenMessage("File saved: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
+            }
         }
 
         private void Load()
@@ -202,7 +224,7 @@ namespace notes
             {
                 _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
             }
-            else
+            else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
                 ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
             }
@@ -299,6 +321,18 @@ namespace notes
             KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
             configfile.load();
             _versionlastrun = configfile.GetValue<string>("version");
+        }
+
+        private void UpdateDelButtonText()
+        {
+            if (_toggledel)
+            {
+                _currentdeltext = _hidebuttondeltext;
+            }
+            else
+            {
+                _currentdeltext = _showbuttondeltext;
+            }
         }
     }
 }
