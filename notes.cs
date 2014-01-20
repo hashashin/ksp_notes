@@ -35,20 +35,26 @@ namespace notes
     {
         private Vector2 _scrollViewVector = Vector2.zero;
         private Vector2 _scrollViewVector2 = Vector2.zero;
+        private Rect _windowRect;
+        private Rect _windowRect2;
+
         private static string _configfile = "notes.dat";
         private static string _notesdir = "notes/Plugins/PluginData/";
         private static string _file = KSP.IO.File.ReadAllText<notes>(_notesdir + _configfile);
         private string _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
-        private bool _visible = false;
-        private Rect _windowRect;
-        private Rect _windowRect2;
-        private ToolbarButtonWrapper _button;
+
         private string _keybind;
+
         private bool _popup = false;
-        private static string _mypath = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
+        private bool _visible = false;
+        private bool _toggledel = false;
+
         private List<string> _filenames;
         private int _selectiongridint = 0;
-        private bool _toggledel = false;
+        private static string _notes = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
+
+        private ToolbarButtonWrapper _button;
+
 
         public void Awake()
         {
@@ -70,51 +76,15 @@ namespace notes
             }
             if (_visible)
             {
-                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, DoMyWindow, "Notes");
+                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, notesWindow, "Notepad");
             }
             if (_popup)
             {
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, Listnotes, "Notes list");
+                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, listWindow, "Notes list");
             }
         }
 
-        public void Listnotes(int windowID)
-        {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
-            _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
-            GUI.EndScrollView();
-            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Select & Load"))
-            {
-                _file = _filenames[_selectiongridint];
-                Load();
-                _filenames = null;
-                _popup = false;
-            }
-            GUI.contentColor = Color.red;
-            if (_toggledel = GUI.Toggle(new Rect(80f, 350.5f, 115f, 20f), _toggledel, "S/H delete button"))
-            {
-                if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
-                {
-                    Delete();
-                    _filenames = null;
-                    _popup = false;
-                    GetNotes();
-                    _popup = true;
-                }
-            }
-            GUI.contentColor = Color.white;
-            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
-            {
-                if (_popup)
-                {
-                    _filenames = null;
-                    _popup = false;
-                }
-            }
-            GUI.DragWindow();
-        }
-
-        public void DoMyWindow(int windowID)
+        public void notesWindow(int windowID)
         {
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text);
@@ -151,6 +121,42 @@ namespace notes
             GUI.DragWindow();
         }
 
+        public void listWindow(int windowID)
+        {
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
+            _selectiongridint = GUILayout.SelectionGrid(_selectiongridint, _filenames.ToArray(), 1);
+            GUI.EndScrollView();
+            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Select & Load"))
+            {
+                _file = _filenames[_selectiongridint];
+                Load();
+                _filenames = null;
+                _popup = false;
+            }
+            GUI.contentColor = Color.red;
+            if (_toggledel = GUI.Toggle(new Rect(80f, 350.5f, 115f, 20f), _toggledel, "S/H delete button"))
+            {
+                if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
+                {
+                    Delete();
+                    _filenames = null;
+                    _popup = false;
+                    GetNotes();
+                    _popup = true;
+                }
+            }
+            GUI.contentColor = Color.white;
+            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
+            {
+                if (_popup)
+                {
+                    _filenames = null;
+                    _popup = false;
+                }
+            }
+            GUI.DragWindow();
+        }
+
         void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
@@ -179,13 +185,17 @@ namespace notes
             }
             else
             {
-                ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 4f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File dont exist: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
         private void Delete()
         {
             KSP.IO.File.Delete<notes>(_filenames[_selectiongridint] + ".txt");
+            if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
+            {
+                ScreenMessages.PostScreenMessage(_filenames[_selectiongridint] + ".txt DELETED!", 3f, ScreenMessageStyle.UPPER_CENTER);
+            }
         }
 
         private void LoadSettings()
@@ -229,7 +239,7 @@ namespace notes
 
         private void GetNotes()
         {
-            this._filenames = new List<string>(Directory.GetFiles(_mypath, "*.txt"));
+            this._filenames = new List<string>(Directory.GetFiles(_notes, "*.txt"));
 
             for (int i = 0; i < this._filenames.Count; i++)
             {
