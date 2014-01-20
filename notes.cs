@@ -26,7 +26,9 @@
 using UnityEngine;
 using KSP.IO;
 using System.IO;
+using System.Reflection;
 using System.Collections.Generic;
+
 
 namespace notes
 {
@@ -55,9 +57,14 @@ namespace notes
 
         private ToolbarButtonWrapper _button;
 
+        private string _version;
+        private string _versionlastrun;
+
 
         public void Awake()
         {
+            LoadVersion();
+            VersionCheck();
             LoadSettings();
             CheckDefaults();
         }
@@ -207,6 +214,7 @@ namespace notes
             _windowRect = configfile.GetValue<Rect>("windowpos");
             _windowRect2 = configfile.GetValue<Rect>("listwindowpos");
             _keybind = configfile.GetValue<string>("keybind");
+            _versionlastrun = configfile.GetValue<string>("version");
             KSPLog.print("[notes.dll] Config Loaded Successfully");
         }
 
@@ -218,6 +226,7 @@ namespace notes
             configfile.SetValue("windowpos", _windowRect);
             configfile.SetValue("listwindowpos", _windowRect2);
             configfile.SetValue("keybind", _keybind);
+            configfile.SetValue("version", _version);
 
             configfile.save();
             KSPLog.print("[notes.dll] Config Saved ");
@@ -261,6 +270,23 @@ namespace notes
             {
                 _keybind = "n";
             }
+        }
+
+        private void VersionCheck()
+        {
+            _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            KSPLog.print("notes.dll version: " + _version);
+            if ((_version != _versionlastrun) && (KSP.IO.File.Exists<notes>("config.xml")))
+            {
+                KSP.IO.File.Delete<notes>("config.xml");
+            }
+        }
+
+        private void LoadVersion()
+        {
+            KSP.IO.PluginConfiguration configfile = KSP.IO.PluginConfiguration.CreateForType<notes>();
+            configfile.load();
+            _versionlastrun = configfile.GetValue<string>("version");
         }
     }
 }
