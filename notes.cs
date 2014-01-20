@@ -56,6 +56,10 @@ namespace notes
         private static string _notes = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
 
         private ToolbarButtonWrapper _button;
+        private string _tooltipon = "Hide Notes plugin";
+        private string _tooltipoff = "Show Notes plugin";
+        private string _btexture_on = "notes/Textures/icon_on";
+        private string _btexture_off = "notes/Textures/icon_off";
 
         private string _version;
         private string _versionlastrun;
@@ -74,8 +78,16 @@ namespace notes
             if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
                 _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
-                _button.TexturePath = "notes/Textures/icon";
-                _button.ToolTip = "Notes plugin";
+                if (_visible)
+                {
+                    _button.TexturePath = _btexture_on;
+                    _button.ToolTip = _tooltipon;
+                }
+                else
+                {
+                    _button.TexturePath = _btexture_off;
+                    _button.ToolTip = _tooltipoff;
+                }
                 _button.AddButtonClickHandler((e) =>
                 {
                     Toggle();
