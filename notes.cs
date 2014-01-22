@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.7
+// notes.cs 0.7.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -52,7 +52,7 @@ namespace notes
 
         private List<string> _filenames;
         private int _selectiongridint = 0;
-        private static string _notes = KSPUtil.ApplicationRootPath + "Gamedata/" + _notesdir + "notes/";
+        private static string _notes = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "Gamedata/" + _notesdir + "notes/";
 
         private ToolbarButtonWrapper _button;
         private string _tooltipon = "Hide Notepad";
@@ -64,7 +64,7 @@ namespace notes
         private static string _hidebuttondeltext = "Hide del button";
         private string _currentdeltext;
 
-        private static string _reloadiconurl = "file://" + KSPUtil.ApplicationRootPath + "/Gamedata/notes/Textures/reload.png";
+        private static string _reloadiconurl = "file://" + KSPUtil.ApplicationRootPath.Replace("\\", "/") + "/Gamedata/notes/Textures/reload.png";
         private WWW _reloadicontex = new WWW(_reloadiconurl);
 
         private string _version;
