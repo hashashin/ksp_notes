@@ -79,29 +79,26 @@ namespace notes
             CheckDefaults();
         }
 
-        void OnGUI()
+        void Start()
         {
             if (ToolbarButtonWrapper.ToolbarManagerPresent)
             {
                 _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
-                if (_visible)
-                {
-                    _button.TexturePath = _btexture_on;
-                    _button.ToolTip = _tooltipon;
-                }
-                else
-                {
-                    _button.TexturePath = _btexture_off;
-                    _button.ToolTip = _tooltipoff;
-                }
+                _button.TexturePath = _btexture_off;
+                _button.ToolTip = _tooltipoff;
                 _button.AddButtonClickHandler((e) =>
                 {
                     Toggle();
                 });
             }
+        }
+
+        void OnGUI()
+        {
             if (_visible)
             {
                 _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, notesWindow, "Notepad");
+
             }
             if (_popup)
             {
@@ -273,10 +270,14 @@ namespace notes
                 _visible = false;
                 _filenames = null;
                 _popup = false;
+                _button.TexturePath = _btexture_off;
+                _button.ToolTip = _tooltipoff;
             }
             else
             {
                 _visible = true;
+                _button.TexturePath = _btexture_on;
+                _button.ToolTip = _tooltipon;
             }
         }
 
