@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.7.1
+// notes.cs 0.8
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -23,6 +23,7 @@
 // -------------------------------------------------------------------------------------------------
 
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -54,7 +55,7 @@ namespace notes
         private int _selectiongridint = 0;
         private static string _notes = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/" + _notesdir + "notes/";
 
-        private ToolbarButtonWrapper _button;
+        private IButton _button;
         private string _tooltipon = "Hide Notepad";
         private string _tooltipoff = "Show Notepad";
         private string _btexture_on = "notes/Textures/icon_on";
@@ -70,6 +71,9 @@ namespace notes
         private string _version;
         private string _versionlastrun;
 
+        private string _vesselinfo;
+        private string _vesselname;
+
 
         void Awake()
         {
@@ -81,12 +85,12 @@ namespace notes
 
         void Start()
         {
-            if (ToolbarButtonWrapper.ToolbarManagerPresent)
+            if (ToolbarManager.ToolbarAvailable)
             {
-                _button = ToolbarButtonWrapper.TryWrapToolbarButton("notes", "toggle");
+                _button = ToolbarManager.Instance.add("notes", "toggle");
                 _button.TexturePath = _btexture_off;
                 _button.ToolTip = _tooltipoff;
-                _button.AddButtonClickHandler((e) =>
+                _button.OnClick += ((e) =>
                 {
                     Toggle();
                 });
@@ -139,6 +143,21 @@ namespace notes
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 Toggle();
+            }
+            if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
+            {
+                GetLogInfo();
+                if (GUI.Button(new Rect(5f, 422f, 100f, 20f), "Open ship log"))
+                {
+                    OpenLog();
+                }
+                if ("log_" + _vesselname == _file)
+                {
+                    if (GUI.Button(new Rect(5f, 442f, 100f, 20f), "New log entry"))
+                    {
+                        _text = _text + _vesselinfo;
+                    }
+                }
             }
             GUI.DragWindow();
         }
@@ -227,6 +246,24 @@ namespace notes
             }
         }
 
+        private void OpenLog()
+        {
+            if (KSP.IO.File.Exists<notes>("log_" + _vesselname + ".txt"))
+            {
+                GetLogInfo();
+                _text = KSP.IO.File.ReadAllText<notes>(_notesdir + "log_" + _vesselname + ".txt");
+                _file = "log_" + _vesselname;
+            }
+            else
+            {
+                GetLogInfo();
+                ScreenMessages.PostScreenMessage("Log for " + _vesselname + " dont exist, creating new: " + "log_" + _vesselname + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
+                _file = "log_" + _vesselname;
+                _text = _vesselinfo;
+                Save();
+            }
+        }
+
         private void Delete()
         {
             KSP.IO.File.Delete<notes>(_filenames[_selectiongridint] + ".txt");
@@ -295,7 +332,7 @@ namespace notes
         {
             if (_windowRect == new Rect(0, 0, 0, 0))
             {
-                _windowRect = new Rect(50f, 25f, 425f, 440f);
+                _windowRect = new Rect(50f, 25f, 425f, 467f);
             }
             if (_windowRect2 == new Rect(0, 0, 0, 0))
             {
@@ -333,6 +370,30 @@ namespace notes
             else
             {
                 _currentdeltext = _showbuttondeltext;
+            }
+        }
+
+        private void GetLogInfo()
+        {
+            if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
+            {
+                _vesselname = FlightGlobals.ActiveVessel.GetName();
+                string _separator = "--------------------------------------------------------------------------------------------------";
+                double _ut = Planetarium.GetUniversalTime();
+                TimeSpan _hdate = TimeSpan.FromSeconds(Math.Floor(_ut));
+                string _days = (_hdate.Days + 1).ToString();
+                string _mins = _hdate.Minutes.ToString();
+                string _secs = _hdate.Seconds.ToString();
+                string _hours = _hdate.Hours.ToString();
+                string _met = System.TimeSpan.FromSeconds(Math.Floor(FlightLogger.met)).ToString();
+                string _year = Math.Floor((_ut / 31536000) + 1).ToString();
+                string _situation = Vessel.GetSituationString(FlightGlobals.ActiveVessel);
+                _vesselinfo =
+                    "\n" +
+                    _separator + "\n" +
+                    _vesselname + " --- Year: " + _year + " Day: " + _days + " Time: " + _hours + ":" + _mins + ":" + _secs + "\n" +
+                    "MET: " + _met + " --- Status: " + _situation + "\n" +
+                    _separator + "\n";
             }
         }
     }
