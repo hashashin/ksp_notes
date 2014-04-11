@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.8
+// notes.cs 0.8.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -46,6 +46,7 @@ namespace notes
         private string _text = KSP.IO.File.ReadAllText<notes>(_notesdir + _file + ".txt");
 
         private string _keybind;
+        private int _fontsize;
 
         private bool _popup = false;
         private bool _visible = false;
@@ -101,12 +102,12 @@ namespace notes
         {
             if (_visible)
             {
-                _windowRect = GUI.Window(GUIUtility.GetControlID(0, FocusType.Passive), _windowRect, notesWindow, "Notepad");
+                _windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect, notesWindow, "Notepad");
 
             }
             if (_popup)
             {
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(1, FocusType.Passive), _windowRect2, listWindow, "Notes list");
+                _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, listWindow, "Notes list");
                 UpdateDelButtonText();
             }
         }
@@ -114,7 +115,9 @@ namespace notes
         private void notesWindow(int windowID)
         {
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
-            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text);
+            GUIStyle myStyle = new GUIStyle(GUI.skin.textArea);
+            myStyle.fontSize = _fontsize;
+            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, myStyle);
             GUI.EndScrollView();
 
             _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
@@ -283,6 +286,7 @@ namespace notes
             _windowRect2 = configfile.GetValue<Rect>("listwindowpos");
             _keybind = configfile.GetValue<string>("keybind");
             _versionlastrun = configfile.GetValue<string>("version");
+            _fontsize = configfile.GetValue<int>("fontsize");
             KSPLog.print("[notes.dll] Config Loaded Successfully");
         }
 
@@ -295,6 +299,7 @@ namespace notes
             configfile.SetValue("listwindowpos", _windowRect2);
             configfile.SetValue("keybind", _keybind);
             configfile.SetValue("version", _version);
+            configfile.SetValue("fontsize", _fontsize);
 
             configfile.save();
             KSPLog.print("[notes.dll] Config Saved ");
@@ -341,6 +346,10 @@ namespace notes
             if (_keybind == null)
             {
                 _keybind = "n";
+            }
+            if (_fontsize == 0)
+            {
+                _fontsize = 13;
             }
         }
 
