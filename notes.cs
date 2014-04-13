@@ -149,7 +149,7 @@ namespace notes
             }
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
             {
-                GetLogInfo();
+                _vesselname = FlightGlobals.ActiveVessel.GetName();
                 if (GUI.Button(new Rect(5f, 422f, 100f, 20f), "Open ship log"))
                 {
                     OpenLog();
@@ -158,6 +158,7 @@ namespace notes
                 {
                     if (GUI.Button(new Rect(5f, 442f, 100f, 20f), "New log entry"))
                     {
+                        GetLogInfo();
                         _text = _text + _vesselinfo;
                     }
                 }
@@ -386,22 +387,45 @@ namespace notes
         {
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
             {
-                _vesselname = FlightGlobals.ActiveVessel.GetName();
+                double _seconds = Planetarium.GetUniversalTime();
+                _seconds = Math.Abs(_seconds);
+
+                const int _minuteL = 60;
+                const int _hourL = 60 * _minuteL;
+                int _dayL = 24 * _hourL;
+                int _yearL = 365 * _dayL;
+                if (GameSettings.KERBIN_TIME)
+                {
+                    _dayL = 6 * _hourL;
+                    _yearL = 426 * _dayL;
+                }
+                int _years = (int)Math.Floor(_seconds / _yearL);
+                int _ryears = _years + 1;
+                int _Tseconds = (int)Math.Floor(_seconds);
+                _seconds = _Tseconds - _years * _yearL;
+                int _days = (int)Math.Floor(_seconds / _dayL);
+                int _rdays = _days + 1;
+                _seconds -= _days * _dayL;
+                int _hours = (int)Math.Floor(_seconds / _hourL);
+                _seconds -= _hours * _hourL;
+                int _minutes = (int)Math.Floor(_seconds / _minuteL);
+                _seconds -= _minutes * _minuteL;
+
                 string _separator = "--------------------------------------------------------------------------------------------------";
-                double _ut = Planetarium.GetUniversalTime();
-                TimeSpan _hdate = TimeSpan.FromSeconds(Math.Floor(_ut));
-                string _days = (_hdate.Days + 1).ToString();
-                string _mins = _hdate.Minutes.ToString();
-                string _secs = _hdate.Seconds.ToString();
-                string _hours = _hdate.Hours.ToString();
-                string _met = System.TimeSpan.FromSeconds(Math.Floor(FlightLogger.met)).ToString();
-                string _year = Math.Floor((_ut / 31536000) + 1).ToString();
+                string _metY = FlightLogger.met_years.ToString();
+                string _metD = FlightLogger.met_days.ToString();
+                string _metH = FlightLogger.met_hours.ToString();
+                string _metM = FlightLogger.met_mins.ToString("00");
+                string _metS = FlightLogger.met_secs.ToString("00");
                 string _situation = Vessel.GetSituationString(FlightGlobals.ActiveVessel);
                 _vesselinfo =
                     "\n" +
                     _separator + "\n" +
-                    _vesselname + " --- Year: " + _year + " Day: " + _days + " Time: " + _hours + ":" + _mins + ":" + _secs + "\n" +
-                    "MET: " + _met + " --- Status: " + _situation + "\n" +
+                    _vesselname + " --- Year: " + _ryears + " Day: " + _rdays + " Time: "
+                    + _hours + ":" + _minutes.ToString("00") + ":" + _seconds.ToString("00") + "\n" +
+
+                    "MET: " + _metY + "y, " + _metD + "d, " + _metH + ":" + _metM + ":" + _metS +
+                    " --- Status: " + _situation + "\n" +
                     _separator + "\n";
             }
         }
