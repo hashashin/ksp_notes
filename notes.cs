@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.8.1
+// notes.cs 0.8.2
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -51,6 +51,7 @@ namespace notes
         private bool _popup = false;
         private bool _visible = false;
         private bool _toggledel = false;
+        private bool _toggleinput = false;
 
         private List<string> _filenames;
         private int _selectiongridint = 0;
@@ -74,6 +75,7 @@ namespace notes
 
         private string _vesselinfo;
         private string _vesselname;
+        private const ControlTypes BLOCK_ALL_CONTROLS = ControlTypes.ALL_SHIP_CONTROLS | ControlTypes.ACTIONS_ALL | ControlTypes.EVA_INPUT | ControlTypes.TIMEWARP | ControlTypes.MISC | ControlTypes.GROUPS_ALL | ControlTypes.CUSTOM_ACTION_GROUPS;
 
 
         void Awake()
@@ -103,7 +105,6 @@ namespace notes
             if (_visible)
             {
                 _windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect, notesWindow, "Notepad");
-
             }
             if (_popup)
             {
@@ -114,6 +115,7 @@ namespace notes
 
         private void notesWindow(int windowID)
         {
+            GUI.SetNextControlName("notes");
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
             GUIStyle myStyle = new GUIStyle(GUI.skin.textArea);
             myStyle.fontSize = _fontsize;
@@ -162,6 +164,25 @@ namespace notes
                         _text = _text + _vesselinfo;
                     }
                 }
+            }
+            if (Application.platform == RuntimePlatform.LinuxPlayer)
+            {
+                if (GUI.Toggle(new Rect(200f, 432f, 150f, 20f), _toggleinput, "Toggle input lock") != _toggleinput)
+                {
+                    _toggleinput = !_toggleinput;
+                    if (_toggleinput)
+                    {
+                        InputLockManager.SetControlLock(BLOCK_ALL_CONTROLS, "notes");
+                        //ScreenMessages.PostScreenMessage("LOCKED", 3f, ScreenMessageStyle.UPPER_CENTER);
+                    }
+                    else
+                    {
+                        InputLockManager.RemoveControlLock("notes");
+                        //ScreenMessages.PostScreenMessage("UNLOCKED", 3f, ScreenMessageStyle.UPPER_CENTER);
+
+                    }
+                }
+
             }
             GUI.DragWindow();
         }
