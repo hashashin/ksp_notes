@@ -1,4 +1,4 @@
-﻿// -------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------------------
 // notes.cs 0.8.2
 //
 // Simple KSP plugin to take notes ingame.
@@ -415,11 +415,7 @@ namespace notes
                 const int _hourL = 60 * _minuteL;
                 int _dayL = 24 * _hourL;
                 int _yearL = 365 * _dayL;
-                if (GameSettings.KERBIN_TIME)
-                {
-                    _dayL = 6 * _hourL;
-                    _yearL = 426 * _dayL;
-                }
+                
                 int _years = (int)Math.Floor(_seconds / _yearL);
                 int _ryears = _years + 1;
                 int _Tseconds = (int)Math.Floor(_seconds);
@@ -433,7 +429,7 @@ namespace notes
                 _seconds -= _minutes * _minuteL;
 
                 string _separator = "--------------------------------------------------------------------------------------------------";
-                string _metY = FlightLogger.met_years.ToString();
+                string _metY = (Convert.ToInt32(FlightLogger.met) / _yearL).ToString();
                 string _metD = FlightLogger.met_days.ToString();
                 string _metH = FlightLogger.met_hours.ToString();
                 string _metM = FlightLogger.met_mins.ToString("00");
