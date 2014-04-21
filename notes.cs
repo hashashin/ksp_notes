@@ -41,6 +41,12 @@ namespace notes
         // The actual note file.
         private string _file;
 
+        // notes files extension
+        private const string _notesExt = ".txt";
+
+        // vessel logs prefix
+        private const string _logPrefix = "log_";
+
         // The "show it" text of delete toggle button
         private const string _showButtonDelText = "Show del button";
 
@@ -133,7 +139,7 @@ namespace notes
             LoadSettings();
             _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
             CheckConfSanity();
-            _text = File.ReadAllText(_notesDir + _file + ".txt");
+            _text = File.ReadAllText(_notesDir + _file + _notesExt);
             _reloadIconTex = new WWW(_reloadIconUrl);
         }
 
@@ -165,7 +171,7 @@ namespace notes
         // Delete the note file.
         private void Delete()
         {
-            File.Delete(_notesDir + _fileNames[_selectionGridInt] + ".txt");
+            File.Delete(_notesDir + _fileNames[_selectionGridInt] + _notesExt);
             if (!((HighLogic.LoadedScene == GameScenes.LOADING) || (HighLogic.LoadedScene == GameScenes.LOADINGBUFFER)))
             {
                 ScreenMessages.PostScreenMessage(_fileNames[_selectionGridInt] + ".txt DELETED!", 3f, ScreenMessageStyle.UPPER_CENTER);
@@ -274,19 +280,28 @@ namespace notes
                     _showList = false;
                 }
             }
+            if (Input.GetMouseButtonUp(2))
+            {
+                if (_fileNames != null && !_fileNames[_selectionGridInt].Contains(_file))
+                {
+                    Save();
+                    _file = _fileNames[_selectionGridInt];
+                    Load();
+                }
+            }
             GUI.DragWindow();
         }
 
         // Load the selected note.
         private void Load()
         {
-            if (File.Exists(_notesDir + _file + ".txt"))
+            if (File.Exists(_notesDir + _file + _notesExt))
             {
-                _text = File.ReadAllText(_notesDir + _file + ".txt");
+                _text = File.ReadAllText(_notesDir + _file + _notesExt);
             }
             else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
-                ScreenMessages.PostScreenMessage("File don't exist: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
@@ -361,7 +376,7 @@ namespace notes
                 {
                     OpenLog();
                 }
-                if ("log_" + _vesselName == _file)
+                if (_logPrefix + _vesselName == _file)
                 {
                     if (GUI.Button(new Rect(5f, 442f, 100f, 20f), "New log entry"))
                     {
@@ -417,15 +432,15 @@ namespace notes
         private void OpenLog()
         {
             GetLogInfo();
-            if (File.Exists(_notesDir + "log_" + _vesselName + ".txt"))
+            if (File.Exists(_notesDir + _logPrefix + _vesselName + _notesExt))
             {
-                _text = File.ReadAllText(_notesDir + "log_" + _vesselName + ".txt");
-                _file = "log_" + _vesselName;
+                _text = File.ReadAllText(_notesDir + _logPrefix + _vesselName + _notesExt);
+                _file = _logPrefix + _vesselName;
             }
             else
             {
-                ScreenMessages.PostScreenMessage("Log for " + _vesselName + " don't exist, creating new: " + "log_" + _vesselName + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
-                _file = "log_" + _vesselName;
+                ScreenMessages.PostScreenMessage("Log for " + _vesselName + " don't exist, creating new: " + _logPrefix + _vesselName + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
+                _file = _logPrefix + _vesselName;
                 _text = _vesselInfo;
                 Save();
             }
@@ -434,12 +449,11 @@ namespace notes
         // Saves the current note.
         private void Save()
         {
-            File.WriteAllText(_notesDir + _file + ".txt", _text);
-            if (HighLogic.LoadedScene == GameScenes.LOADINGBUFFER || HighLogic.LoadedScene == GameScenes.LOADING)
+            File.WriteAllText(_notesDir + _file + _notesExt, _text);
+            if (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER && HighLogic.LoadedScene != GameScenes.LOADING)
             {
-                return;
+                ScreenMessages.PostScreenMessage("File saved: " + _file + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
             }
-            ScreenMessages.PostScreenMessage("File saved: " + _file + ".txt", 3f, ScreenMessageStyle.UPPER_CENTER);
         }
 
         // Saves the settings.
@@ -466,7 +480,7 @@ namespace notes
             _button = ToolbarManager.Instance.add("notes", "toggle");
             _button.TexturePath = _btextureOff;
             _button.ToolTip = _tooltipOff;
-            _button.OnClick += (e => Toggle());
+            _button.OnClick += e => Toggle();
         }
 
         // Toggles plugin visibility.
