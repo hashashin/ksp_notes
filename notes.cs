@@ -25,7 +25,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using KSP.IO;
 using UnityEngine;
@@ -426,7 +425,7 @@ namespace notes
             if (GUI.Button(new Rect(305f, 2f, 15f, 15f), ">"))
             {
                 GetNotes();
-                if (_selectionGridInt == _fileNames.LastIndexOf(_fileNames.Last())) return;
+                if (_selectionGridInt == _fileNames.Count - 1) return;
                 _selectionGridInt++;
                 Save();
                 _file = _fileNames[_selectionGridInt];
