@@ -22,11 +22,11 @@
 //
 // -------------------------------------------------------------------------------------------------
 
+using KSP.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using KSP.IO;
 using UnityEngine;
 using File = System.IO.File;
 
@@ -131,6 +131,9 @@ namespace notes
         // The rectangle for list windows.
         private Rect _windowRect2;
 
+        //toggle skin.
+        private bool _useKspSkin;
+
         // Awakes the plugin.
         private void Awake()
         {
@@ -148,11 +151,11 @@ namespace notes
         {
             if (_windowRect == new Rect(0, 0, 0, 0))
             {
-                _windowRect = new Rect(50f, 25f, 425f, 467f);
+                _windowRect = new Rect(50f, 25f, 425f, 487f);
             }
             if (_windowRect2 == new Rect(0, 0, 0, 0))
             {
-                _windowRect2 = new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 260f, 370f);
+                _windowRect2 = new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 260f, 390f);
             }
             if (_keybind == null)
             {
@@ -206,7 +209,7 @@ namespace notes
             int _minutes = (int)Math.Floor(_seconds / _minuteL);
             _seconds -= _minutes * _minuteL;
 
-            const string _separator = "--------------------------------------------------------------------------------------------------";
+            const string _separator = "------------------------------------------------------------------------------------------------";
             string _metY = FlightLogger.met_years.ToString();
             string _metD = FlightLogger.met_days.ToString();
             string _metH = FlightLogger.met_hours.ToString();
@@ -241,28 +244,29 @@ namespace notes
 
         private void ListWindow(int windowId)
         {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 15f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
             _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1);
             GUI.EndScrollView();
-            if (GUI.Button(new Rect(5f, 320f, 100f, 30f), "Load selected"))
+            if (GUI.Button(new Rect(5f, 330f, 100f, 30f), "Load selected"))
             {
                 _file = _fileNames[_selectionGridInt];
                 Load();
                 _fileNames = null;
                 _showList = false;
             }
-            GUI.DrawTexture(new Rect(115f, 320f, 30f, 30f), _reloadIconTex.texture, ScaleMode.ScaleToFit, true, 0f);
-            if (GUI.Button(new Rect(115f, 320f, 30f, 30f), ""))
+
+            if (GUI.Button(new Rect(115f, 330f, 30f, 30f), string.Empty))
             {
                 _fileNames = null;
                 _showList = false;
                 GetNotes();
                 _showList = true;
             }
-            if (_toggleDel = GUI.Toggle(new Rect(75f, 350.5f, 115f, 20f), _toggleDel, _currentDelText))
+            GUI.DrawTexture(new Rect(115f, 330f, 30f, 30f), _reloadIconTex.texture, ScaleMode.ScaleToFit, true, 0f);
+            if (_toggleDel = GUI.Toggle(new Rect(75f, 360.5f, 115f, 20f), _toggleDel, _currentDelText))
             {
                 GUI.contentColor = Color.red;
-                if (GUI.Button(new Rect(155f, 320f, 100f, 30f), "Delete"))
+                if (GUI.Button(new Rect(155f, 330f, 100f, 30f), "Delete"))
                 {
                     Delete();
                     _fileNames = null;
@@ -289,7 +293,7 @@ namespace notes
                     Load();
                 }
             }
-            GUI.DragWindow();
+            GUI.DragWindow(); ;
         }
 
         // Load the selected note.
@@ -318,6 +322,8 @@ namespace notes
             _versionLastRun = _configFile.GetValue<string>("version");
             _fontSize = _configFile.GetValue<int>("font size");
             _file = _configFile.GetValue<string>("last note opened");
+            _useKspSkin = _configFile.GetValue<bool>("use ksp skin");
+            _visible = _configFile.GetValue<bool>("main window state");
 
             print("[notes.dll] Config Loaded Successfully");
         }
@@ -337,22 +343,22 @@ namespace notes
         private void NotesWindow(int windowId)
         {
             GUI.SetNextControlName("notes");
-            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 15f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
+            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 25f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
             GUIStyle _myStyle = new GUIStyle(GUI.skin.textArea) { fontSize = _fontSize };
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, _myStyle);
             GUI.EndScrollView();
 
-            _file = GUI.TextField(new Rect(5f, 400f, 150f, 20f), _file);
+            _file = GUI.TextField(new Rect(5f, 410f, 150f, 20f), _file);
 
-            if (GUI.Button(new Rect(155f, 400f, 80f, 30f), "Load"))
+            if (GUI.Button(new Rect(155f, 410f, 80f, 30f), "Load"))
             {
                 Load();
             }
-            if (GUI.Button(new Rect(235f, 400f, 80f, 30f), "Save"))
+            if (GUI.Button(new Rect(235f, 410f, 80f, 30f), "Save"))
             {
                 Save();
             }
-            if (GUI.Button(new Rect(315f, 400f, 80f, 30f), "List Notes"))
+            if (GUI.Button(new Rect(315f, 410f, 80f, 30f), "List Notes"))
             {
                 if (_fileNames == null)
                 {
@@ -369,16 +375,21 @@ namespace notes
             {
                 Toggle();
             }
+            if (GUI.Button(new Rect(20f, 2f, 13f, 13f), "TS"))
+            {
+                _useKspSkin = !_useKspSkin;
+            }
+
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
             {
                 _vesselName = FlightGlobals.ActiveVessel.GetName();
-                if (GUI.Button(new Rect(5f, 422f, 100f, 20f), "Open ship log"))
+                if (GUI.Button(new Rect(5f, 432f, 100f, 20f), "Open ship log"))
                 {
                     OpenLog();
                 }
                 if (_logPrefix + _vesselName == _file)
                 {
-                    if (GUI.Button(new Rect(5f, 442f, 100f, 20f), "New log entry"))
+                    if (GUI.Button(new Rect(5f, 452f, 100f, 20f), "New log entry"))
                     {
                         GetLogInfo();
                         _text = _text + _vesselInfo;
@@ -387,7 +398,7 @@ namespace notes
             }
             if (Application.platform == RuntimePlatform.LinuxPlayer)
             {
-                if (GUI.Toggle(new Rect(200f, 432f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
+                if (GUI.Toggle(new Rect(200f, 452f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
                 {
                     _toggleInput = !_toggleInput;
                     if (_toggleInput)
@@ -417,6 +428,8 @@ namespace notes
         // Executes the graphical user interface action.
         private void OnGUI()
         {
+            GUISkin _defGuiSkin = GUI.skin;
+            GUI.skin = _useKspSkin ? HighLogic.Skin : _defGuiSkin;
             if (_visible)
             {
                 _windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect, NotesWindow, "Notepad");
@@ -426,6 +439,7 @@ namespace notes
                 _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow, "Notes list");
                 UpdateDelButtonText();
             }
+            GUI.skin = _defGuiSkin;
         }
 
         // Opens the vessel log.
@@ -468,6 +482,8 @@ namespace notes
             _configFile.SetValue("version", _version);
             _configFile.SetValue("font size", _fontSize);
             _configFile.SetValue("last note opened", _file);
+            _configFile.SetValue("use ksp skin", _useKspSkin);
+            _configFile.SetValue("main window state", _visible);
 
             _configFile.save();
             print("[notes.dll] Config Saved ");
