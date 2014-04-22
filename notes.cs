@@ -18,15 +18,15 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 // Email: mecagoenbush at gmail dot com
-// Freenode: hashashin
+// Freenode & EsperNet: hashashin
 //
 // -------------------------------------------------------------------------------------------------
 
-using KSP.IO;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using KSP.IO;
 using UnityEngine;
 using File = System.IO.File;
 
@@ -36,7 +36,9 @@ namespace notes
     public class Notes : MonoBehaviour
     {
         // Define the controls to block
-        private const ControlTypes _blockAllControls = ControlTypes.ALL_SHIP_CONTROLS | ControlTypes.ACTIONS_ALL | ControlTypes.EVA_INPUT | ControlTypes.TIMEWARP | ControlTypes.MISC | ControlTypes.GROUPS_ALL | ControlTypes.CUSTOM_ACTION_GROUPS;
+        private const ControlTypes _blockAllControls =
+            ControlTypes.ALL_SHIP_CONTROLS | ControlTypes.ACTIONS_ALL | ControlTypes.EVA_INPUT | ControlTypes.TIMEWARP |
+            ControlTypes.MISC | ControlTypes.GROUPS_ALL | ControlTypes.CUSTOM_ACTION_GROUPS;
 
         // The actual note file.
         private string _file;
@@ -57,7 +59,8 @@ namespace notes
         private string _notesDir;
 
         // The reload icon texture file location.
-        private readonly string _reloadIconUrl = "file://" + KSPUtil.ApplicationRootPath.Replace("\\", "/") + "/GameData/notes/Textures/reload.png";
+        private readonly string _reloadIconUrl = "file://" + KSPUtil.ApplicationRootPath.Replace("\\", "/") +
+                                                 "/GameData/notes/Textures/reload.png";
 
         // The toolbar texture off.
         private const string _btextureOff = "notes/Textures/icon_off";
@@ -177,7 +180,8 @@ namespace notes
             File.Delete(_notesDir + _fileNames[_selectionGridInt] + _notesExt);
             if (!((HighLogic.LoadedScene == GameScenes.LOADING) || (HighLogic.LoadedScene == GameScenes.LOADINGBUFFER)))
             {
-                ScreenMessages.PostScreenMessage(_fileNames[_selectionGridInt] + ".txt DELETED!", 3f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(_fileNames[_selectionGridInt] + ".txt DELETED!", 3f,
+                    ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
@@ -209,7 +213,8 @@ namespace notes
             int _minutes = (int)Math.Floor(_seconds / _minuteL);
             _seconds -= _minutes * _minuteL;
 
-            const string _separator = "------------------------------------------------------------------------------------------------";
+            const string _separator =
+                "------------------------------------------------------------------------------------------------";
             string _metY = FlightLogger.met_years.ToString();
             string _metD = FlightLogger.met_days.ToString();
             string _metH = FlightLogger.met_hours.ToString();
@@ -221,7 +226,6 @@ namespace notes
                 _separator + "\n" +
                 _vesselName + " --- Year: " + _ryears + " Day: " + _rdays + " Time: "
                 + _hours + ":" + _minutes.ToString("00") + ":" + _seconds.ToString("00") + "\n" +
-
                 "MET: " + _metY + "y, " + _metD + "d, " + _metH + ":" + _metM + ":" + _metS +
                 " --- Status: " + _situation + "\n" +
                 _separator + "\n";
@@ -244,7 +248,8 @@ namespace notes
 
         private void ListWindow(int windowId)
         {
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 295f, 300f), _scrollViewVector2, new Rect(0f, 0f, 0f, 4360f));
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 295f, 300f), _scrollViewVector2,
+                new Rect(0f, 0f, 0f, 4360f));
             _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1);
             GUI.EndScrollView();
             if (GUI.Button(new Rect(5f, 330f, 100f, 30f), "Load selected"))
@@ -293,7 +298,7 @@ namespace notes
                     Load();
                 }
             }
-            GUI.DragWindow(); ;
+            GUI.DragWindow();
         }
 
         // Load the selected note.
@@ -305,7 +310,8 @@ namespace notes
             }
             else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
-                ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f,
+                    ScreenMessageStyle.UPPER_CENTER);
             }
         }
 
@@ -343,7 +349,8 @@ namespace notes
         private void NotesWindow(int windowId)
         {
             GUI.SetNextControlName("notes");
-            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 25f, 420f, 380f), _scrollViewVector, new Rect(0f, 0f, 400f, 5300f));
+            _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 25f, 420f, 380f), _scrollViewVector,
+                new Rect(0f, 0f, 400f, 5300f));
             GUIStyle _myStyle = new GUIStyle(GUI.skin.textArea) { fontSize = _fontSize };
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, _myStyle);
             GUI.EndScrollView();
@@ -436,7 +443,8 @@ namespace notes
             }
             if (_showList)
             {
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow, "Notes list");
+                _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
+                    "Notes list");
                 UpdateDelButtonText();
             }
             GUI.skin = _defGuiSkin;
@@ -453,7 +461,9 @@ namespace notes
             }
             else
             {
-                ScreenMessages.PostScreenMessage("Log for " + _vesselName + " don't exist, creating new: " + _logPrefix + _vesselName + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(
+                    "Log for " + _vesselName + " don't exist, creating new: " + _logPrefix + _vesselName + _notesExt, 3f,
+                    ScreenMessageStyle.UPPER_CENTER);
                 _file = _logPrefix + _vesselName;
                 _text = _vesselInfo;
                 Save();
