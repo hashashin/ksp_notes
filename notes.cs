@@ -35,24 +35,24 @@ namespace notes
     [KSPAddon(KSPAddon.Startup.EveryScene, false)]
     public class Notes : MonoBehaviour
     {
-        // Define the controls to block
+        // Define the controls to block.
         private const ControlTypes _blockAllControls =
             ControlTypes.ALL_SHIP_CONTROLS | ControlTypes.ACTIONS_ALL | ControlTypes.EVA_INPUT | ControlTypes.TIMEWARP |
             ControlTypes.MISC | ControlTypes.GROUPS_ALL | ControlTypes.CUSTOM_ACTION_GROUPS;
 
-        // The actual note file.
+        // The actual note file name without extension.
         private string _file;
 
-        // notes files extension
+        // Notes file extension.
         private const string _notesExt = ".txt";
 
-        // vessel logs prefix
+        // Vessel log prefix.
         private const string _logPrefix = "log_";
 
-        // The "show it" text of delete toggle button
+        // The "show it" text of toggle delete button.
         private const string _showButtonDelText = "Show del button";
 
-        // The "hide it" text of delete toggle button
+        // The "hide it" text of toggle delete button.
         private const string _hideButtonDelText = "Hide del button";
 
         // The directory where notes text files live.
@@ -68,13 +68,13 @@ namespace notes
         // The toolbar texture on.
         private const string _btextureOn = "notes/Textures/icon_on";
 
-        // The button.
+        // The button for the toolbar.
         private IButton _button;
 
         // The current delete toggle button text.
         private string _currentDelText;
 
-        // The list of all notes.
+        // The list of all notes without extension.
         private List<string> _fileNames;
 
         // The font size.
@@ -87,7 +87,7 @@ namespace notes
         private bool _showList;
 
         // The reload icon texture.
-        private WWW _reloadIconTex;
+        private Texture2D _reloadIconTex;
 
         // The scroll view vector.
         private Vector2 _scrollViewVector = Vector2.zero;
@@ -98,7 +98,7 @@ namespace notes
         // The selection grid int for the notes list.
         private int _selectionGridInt;
 
-        // The text.
+        // The text of the note.
         private string _text;
 
         // true to show delete button, false to hide.
@@ -134,7 +134,7 @@ namespace notes
         // The rectangle for list windows.
         private Rect _windowRect2;
 
-        //toggle skin.
+        //true use ksp skin, false use unity stock.
         private bool _useKspSkin;
 
         // Awakes the plugin.
@@ -146,7 +146,7 @@ namespace notes
             _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
             CheckConfSanity();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
-            _reloadIconTex = new WWW(_reloadIconUrl);
+            _reloadIconTex = new WWW(_reloadIconUrl).texture;
         }
 
         // Check config.xml sanity.
@@ -174,7 +174,7 @@ namespace notes
             }
         }
 
-        // Delete the note file.
+        // Delete note action.
         private void Delete()
         {
             File.Delete(_notesDir + _fileNames[_selectionGridInt] + _notesExt);
@@ -242,16 +242,25 @@ namespace notes
             }
         }
 
+        //Replace for gui.button with a texture
+        static bool GuiButtonTexture2D(Rect r, Texture2D t)
+        {
+            GUI.DrawTexture(r, t);
+            return GUI.Button(r, "", "");
+        }
+
         // List window.
         //
         // <param name="windowId">Identifier for the window.</param>
 
         private void ListWindow(int windowId)
         {
+            // Notes list gui.
             _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 295f, 300f), _scrollViewVector2,
                 new Rect(0f, 0f, 0f, 4360f));
             _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1);
             GUI.EndScrollView();
+            // Loads selected note in the list.
             if (GUI.Button(new Rect(5f, 330f, 100f, 30f), "Load selected"))
             {
                 _file = _fileNames[_selectionGridInt];
@@ -259,18 +268,19 @@ namespace notes
                 _fileNames = null;
                 _showList = false;
             }
-
-            if (GUI.Button(new Rect(115f, 330f, 30f, 30f), string.Empty))
+            // Refresh the notes list.
+            if (GuiButtonTexture2D(new Rect(115f, 330f, _reloadIconTex.width, _reloadIconTex.height), _reloadIconTex))
             {
                 _fileNames = null;
                 _showList = false;
                 GetNotes();
                 _showList = true;
             }
-            GUI.DrawTexture(new Rect(115f, 330f, 30f, 30f), _reloadIconTex.texture, ScaleMode.ScaleToFit, true, 0f);
+            // Toggle the delete button visibility for avoid missclicks.
             if (_toggleDel = GUI.Toggle(new Rect(75f, 360.5f, 115f, 20f), _toggleDel, _currentDelText))
             {
                 GUI.contentColor = Color.red;
+                // Delete the selected note.
                 if (GUI.Button(new Rect(155f, 330f, 100f, 30f), "Delete"))
                 {
                     Delete();
@@ -281,6 +291,7 @@ namespace notes
                 }
                 GUI.contentColor = Color.white;
             }
+            // Close the list window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 if (_showList)
@@ -289,6 +300,7 @@ namespace notes
                     _showList = false;
                 }
             }
+            // detect middle clicks and load the clicked note if it's not already loaded.
             if (Input.GetMouseButtonUp(2))
             {
                 if (_fileNames != null && !_fileNames[_selectionGridInt].Contains(_file))
@@ -298,16 +310,18 @@ namespace notes
                     Load();
                 }
             }
+            // Makes the window dragable.
             GUI.DragWindow();
         }
 
-        // Load the selected note.
+        // Action to load the selected note.
         private void Load()
         {
             if (File.Exists(_notesDir + _file + _notesExt))
             {
                 _text = File.ReadAllText(_notesDir + _file + _notesExt);
             }
+            // screen messages don't appear on those scenes
             else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
                 ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f,
@@ -315,7 +329,7 @@ namespace notes
             }
         }
 
-        // Load the settings.
+        // Load the settings of the plugin.
         private void LoadSettings()
         {
             print("[notes.dll] Loading Config...");
@@ -334,7 +348,7 @@ namespace notes
             print("[notes.dll] Config Loaded Successfully");
         }
 
-        // Load the version.
+        // Load only the version.
         private void LoadVersion()
         {
             PluginConfiguration _configFile = PluginConfiguration.CreateForType<Notes>();
@@ -348,23 +362,28 @@ namespace notes
 
         private void NotesWindow(int windowId)
         {
+            // Set the control name for later usage.
             GUI.SetNextControlName("notes");
+            // Text area with scroll bar
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 25f, 420f, 380f), _scrollViewVector,
                 new Rect(0f, 0f, 400f, 5300f));
+            // Configurable font size, independent from the skin.
             GUIStyle _myStyle = new GUIStyle(GUI.skin.textArea) { fontSize = _fontSize };
             _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, _myStyle);
             GUI.EndScrollView();
-
+            // Show the actual note file name.
             _file = GUI.TextField(new Rect(5f, 410f, 150f, 20f), _file);
-
+            // Load note file button.
             if (GUI.Button(new Rect(155f, 410f, 80f, 30f), "Load"))
             {
                 Load();
             }
+            // Save note file button.
             if (GUI.Button(new Rect(235f, 410f, 80f, 30f), "Save"))
             {
                 Save();
             }
+            // Opens the notes list windows.
             if (GUI.Button(new Rect(315f, 410f, 80f, 30f), "List Notes"))
             {
                 if (_fileNames == null)
@@ -378,22 +397,27 @@ namespace notes
                     _showList = false;
                 }
             }
+            // Close the notes window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
             {
                 Toggle();
             }
+            // Toggle current skin.
             if (GUI.Button(new Rect(20f, 2f, 13f, 13f), "TS"))
             {
                 _useKspSkin = !_useKspSkin;
             }
-
+            // If we are on flight show the vessel logs buttons
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
             {
-                _vesselName = FlightGlobals.ActiveVessel.GetName();
+                // Just in case
+                if (FlightGlobals.ActiveVessel != null) _vesselName = FlightGlobals.ActiveVessel.GetName();
+                // Button for open the vessel log file
                 if (GUI.Button(new Rect(5f, 432f, 100f, 20f), "Open ship log"))
                 {
                     OpenLog();
                 }
+                // If the vessel log opened is the one for the current vessel, show the button to add a new entry.
                 if (_logPrefix + _vesselName == _file)
                 {
                     if (GUI.Button(new Rect(5f, 452f, 100f, 20f), "New log entry"))
@@ -403,6 +427,7 @@ namespace notes
                     }
                 }
             }
+            // Workaround for http://bugs.kerbalspaceprogram.com/issues/1230
             if (Application.platform == RuntimePlatform.LinuxPlayer)
             {
                 if (GUI.Toggle(new Rect(200f, 452f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
@@ -418,6 +443,7 @@ namespace notes
                     }
                 }
             }
+            // Make this window dragable
             GUI.DragWindow();
         }
 
@@ -435,6 +461,7 @@ namespace notes
         // Executes the graphical user interface action.
         private void OnGUI()
         {
+            // Saves the current Gui.skin for later restore
             GUISkin _defGuiSkin = GUI.skin;
             GUI.skin = _useKspSkin ? HighLogic.Skin : _defGuiSkin;
             if (_visible)
@@ -447,6 +474,7 @@ namespace notes
                     "Notes list");
                 UpdateDelButtonText();
             }
+            //Restore the skin
             GUI.skin = _defGuiSkin;
         }
 
@@ -546,6 +574,7 @@ namespace notes
         // Version check.
         private void VersionCheck()
         {
+            // Delete the config.xml if the version changes to avoid problems.
             _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             print("notes.dll version: " + _version);
             if ((_version != _versionLastRun) && (File.Exists(_notesDir + "config.xml")))
