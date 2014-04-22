@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using KSP.IO;
 using UnityEngine;
@@ -141,12 +142,13 @@ namespace notes
         private void Awake()
         {
             LoadVersion();
+            _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
             VersionCheck();
             LoadSettings();
-            _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
             CheckConfSanity();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
             _reloadIconTex = new WWW(_reloadIconUrl).texture;
+            GetNotes();
         }
 
         // Check config.xml sanity.
@@ -226,7 +228,7 @@ namespace notes
                 _separator + "\n" +
                 _vesselName + " --- Year: " + _ryears + " Day: " + _rdays + " Time: "
                 + _hours + ":" + _minutes.ToString("00") + ":" + _seconds.ToString("00") + "\n" +
-                "MET: " + _metY + "y, " + _metD + "d, " + _metH + ":" + _metM + ":" + _metS +
+                "MET: " + _metY + "y " + _metD + "d " + _metH + ":" + _metM + ":" + _metS +
                 " --- Status: " + _situation + "\n" +
                 _separator + "\n";
         }
@@ -243,7 +245,7 @@ namespace notes
         }
 
         //Replace for gui.button with a texture
-        static bool GuiButtonTexture2D(Rect r, Texture2D t)
+        private static bool GuiButtonTexture2D(Rect r, Texture2D t)
         {
             GUI.DrawTexture(r, t);
             return GUI.Button(r, "", "");
@@ -276,7 +278,7 @@ namespace notes
                 GetNotes();
                 _showList = true;
             }
-            // Toggle the delete button visibility for avoid missclicks.
+            // Toggle the delete button visibility to avoid missclicks.
             if (_toggleDel = GUI.Toggle(new Rect(75f, 360.5f, 115f, 20f), _toggleDel, _currentDelText))
             {
                 GUI.contentColor = Color.red;
@@ -386,16 +388,7 @@ namespace notes
             // Opens the notes list windows.
             if (GUI.Button(new Rect(315f, 410f, 80f, 30f), "List Notes"))
             {
-                if (_fileNames == null)
-                {
-                    GetNotes();
-                    _showList = true;
-                }
-                else
-                {
-                    _fileNames = null;
-                    _showList = false;
-                }
+                _showList = !_showList;
             }
             // Close the notes window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
@@ -406,6 +399,38 @@ namespace notes
             if (GUI.Button(new Rect(20f, 2f, 13f, 13f), "TS"))
             {
                 _useKspSkin = !_useKspSkin;
+            }
+            // buttons for change the font size.
+            if (GUI.Button(new Rect(80f, 2f, 15f, 15f), "-"))
+            {
+                // Who wants a 0 size font?
+                if (_fontSize <= 1) return;
+                _fontSize--;
+            }
+            GUI.Label(new Rect(95f, 0f, 60f, 20f), "Font size");
+            if (GUI.Button(new Rect(150f, 2f, 15f, 15f), "+"))
+            {
+                // Big big big!!!
+                _fontSize++;
+            }
+            if (GUI.Button(new Rect(260f, 2f, 15f, 15f), "<"))
+            {
+                GetNotes();
+                if (_selectionGridInt == 0) return;
+                _selectionGridInt--;
+                Save();
+                _file = _fileNames[_selectionGridInt];
+                Load();
+            }
+            GUI.Label(new Rect(275f, 0f, 60f, 20f), "Note");
+            if (GUI.Button(new Rect(305f, 2f, 15f, 15f), ">"))
+            {
+                GetNotes();
+                if (_selectionGridInt == _fileNames.LastIndexOf(_fileNames.Last())) return;
+                _selectionGridInt++;
+                Save();
+                _file = _fileNames[_selectionGridInt];
+                Load();
             }
             // If we are on flight show the vessel logs buttons
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
@@ -577,10 +602,13 @@ namespace notes
             // Delete the config.xml if the version changes to avoid problems.
             _version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             print("notes.dll version: " + _version);
-            if ((_version != _versionLastRun) && (File.Exists(_notesDir + "config.xml")))
+            // Check for remains of old versions
+            if (File.Exists(_notesDir + "notes.dat"))
             {
-                File.Delete(_notesDir + "config.xml");
+                File.Delete(_notesDir + "notes.dat");
             }
+            if (_version == _versionLastRun || !File.Exists(_notesDir + "config.xml")) return;
+            File.Delete(_notesDir + "config.xml");
         }
     }
 }
