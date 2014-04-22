@@ -55,6 +55,9 @@ namespace notes
         // The "hide it" text of toggle delete button.
         private const string _hideButtonDelText = "Hide del button";
 
+        // The mouse button for open notes in the list on click 0=left 1=right 2=middle(default).
+        private int _mouseButton = -1;
+
         // The directory where notes text files live.
         private string _notesDir;
 
@@ -144,35 +147,8 @@ namespace notes
             _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
             VersionCheck();
             LoadSettings();
-            CheckConfSanity();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
             _reloadIconTex = new WWW(_reloadIconUrl).texture;
-            GetNotes();
-        }
-
-        // Check config.xml sanity.
-        private void CheckConfSanity()
-        {
-            if (_windowRect == new Rect(0, 0, 0, 0))
-            {
-                _windowRect = new Rect(50f, 25f, 425f, 487f);
-            }
-            if (_windowRect2 == new Rect(0, 0, 0, 0))
-            {
-                _windowRect2 = new Rect(Screen.width / 2 - 150f, Screen.height / 2 - 75f, 260f, 390f);
-            }
-            if (_keybind == null)
-            {
-                _keybind = "n";
-            }
-            if (_fontSize == 0)
-            {
-                _fontSize = 13;
-            }
-            if (_file == null)
-            {
-                _file = "notes";
-            }
         }
 
         // Delete note action.
@@ -235,7 +211,7 @@ namespace notes
         // Get list of the notes.
         private void GetNotes()
         {
-            _fileNames = new List<string>(Directory.GetFiles(_notesDir, "*.txt"));
+            _fileNames = new List<string>(Directory.GetFiles(_notesDir, "*" + _notesExt));
 
             for (int i = 0; i < _fileNames.Count; i++)
             {
@@ -243,7 +219,7 @@ namespace notes
             }
         }
 
-        //Replace for gui.button with a texture
+        // Simplified replacer for gui.button with a texture
         private static bool GuiButtonTexture2D(Rect r, Texture2D t)
         {
             GUI.DrawTexture(r, t);
@@ -257,9 +233,10 @@ namespace notes
         private void ListWindow(int windowId)
         {
             // Notes list gui.
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 295f, 300f), _scrollViewVector2,
-                new Rect(0f, 0f, 0f, 4360f));
-            _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1);
+            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 255f, 300f), _scrollViewVector2,
+                new Rect(0f, 0f, 0f, 25f * (_fileNames.Count + 5)));
+            var _options = new GUILayoutOption[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
+            _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1, _options);
             GUI.EndScrollView();
             // Loads selected note in the list.
             if (GUI.Button(new Rect(5f, 330f, 100f, 30f), "Load selected"))
@@ -302,9 +279,9 @@ namespace notes
                 }
             }
             // detect middle clicks and load the clicked note if it's not already loaded.
-            if (Input.GetMouseButtonUp(2))
+            if (Input.GetMouseButtonUp(_mouseButton))
             {
-                if (_fileNames != null && !_fileNames[_selectionGridInt].Contains(_file))
+                if (_fileNames != null && !_fileNames[_selectionGridInt].Equals(_file))
                 {
                     Save();
                     _file = _fileNames[_selectionGridInt];
@@ -337,14 +314,16 @@ namespace notes
             PluginConfiguration _configFile = PluginConfiguration.CreateForType<Notes>();
             _configFile.load();
 
-            _windowRect = _configFile.GetValue<Rect>("main window position");
-            _windowRect2 = _configFile.GetValue<Rect>("list window position");
-            _keybind = _configFile.GetValue<string>("keybind");
+            _windowRect = _configFile.GetValue("main window position", new Rect(50f, 25f, 425f, 487f));
+            _windowRect2 = _configFile.GetValue("list window position", new Rect(Screen.width / 2 - 150f,
+                                                                        Screen.height / 2 - 75f, 260f, 390f));
+            _keybind = _configFile.GetValue("keybind", "n");
             _versionLastRun = _configFile.GetValue<string>("version");
-            _fontSize = _configFile.GetValue<int>("font size");
-            _file = _configFile.GetValue<string>("last note opened");
+            _fontSize = _configFile.GetValue("font size", 13);
+            _file = _configFile.GetValue("last note opened", "notes");
             _useKspSkin = _configFile.GetValue<bool>("use ksp skin");
             _visible = _configFile.GetValue<bool>("main window state");
+            _mouseButton = _configFile.GetValue("mouse button", 2);
 
             print("[notes.dll] Config Loaded Successfully");
         }
@@ -387,7 +366,15 @@ namespace notes
             // Opens the notes list windows.
             if (GUI.Button(new Rect(315f, 410f, 80f, 30f), "List Notes"))
             {
-                _showList = !_showList;
+                if (_showList)
+                {
+                    _showList = false;
+                }
+                else if (!_showList)
+                {
+                    GetNotes();
+                    _showList = true;
+                }
             }
             // Close the notes window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
@@ -395,7 +382,7 @@ namespace notes
                 Toggle();
             }
             // Toggle current skin.
-            if (GUI.Button(new Rect(20f, 2f, 13f, 13f), "TS"))
+            if (GUI.Button(new Rect(20f, 2f, 22f, 16f), "S"))
             {
                 _useKspSkin = !_useKspSkin;
             }
@@ -546,6 +533,7 @@ namespace notes
             _configFile.SetValue("last note opened", _file);
             _configFile.SetValue("use ksp skin", _useKspSkin);
             _configFile.SetValue("main window state", _visible);
+            _configFile.SetValue("mouse button", _mouseButton);
 
             _configFile.save();
             print("[notes.dll] Config Saved ");
