@@ -90,7 +90,7 @@ namespace notes
         private bool _showList;
 
         // The reload icon texture.
-        private Texture2D _reloadIconTex;
+        private WWW _reloadIconTex;
 
         // The scroll view vector.
         private Vector2 _scrollViewVector = Vector2.zero;
@@ -148,7 +148,7 @@ namespace notes
             VersionCheck();
             LoadSettings();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
-            _reloadIconTex = new WWW(_reloadIconUrl).texture;
+            _reloadIconTex = new WWW(_reloadIconUrl);
         }
 
         // Delete note action.
@@ -219,13 +219,6 @@ namespace notes
             }
         }
 
-        // Simplified replacer for gui.button with a texture
-        private static bool GuiButtonTexture2D(Rect r, Texture2D t)
-        {
-            GUI.DrawTexture(r, t);
-            return GUI.Button(r, "", "");
-        }
-
         // List window.
         //
         // <param name="windowId">Identifier for the window.</param>
@@ -235,7 +228,7 @@ namespace notes
             // Notes list gui.
             _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 255f, 300f), _scrollViewVector2,
                 new Rect(0f, 0f, 0f, 25f * (_fileNames.Count + 5)));
-            var _options = new GUILayoutOption[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
+            var _options = new[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
             _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1, _options);
             GUI.EndScrollView();
             // Loads selected note in the list.
@@ -247,13 +240,14 @@ namespace notes
                 _showList = false;
             }
             // Refresh the notes list.
-            if (GuiButtonTexture2D(new Rect(115f, 330f, _reloadIconTex.width, _reloadIconTex.height), _reloadIconTex))
+            if (GUI.Button(new Rect(115f, 330f, 30f, 30f), string.Empty))
             {
                 _fileNames = null;
                 _showList = false;
                 GetNotes();
                 _showList = true;
             }
+            GUI.DrawTexture(new Rect(115f, 330f, 30f, 30f), _reloadIconTex.texture, ScaleMode.ScaleToFit, true, 0f);
             // Toggle the delete button visibility to avoid missclicks.
             if (_toggleDel = GUI.Toggle(new Rect(75f, 360.5f, 115f, 20f), _toggleDel, _currentDelText))
             {
@@ -474,9 +468,9 @@ namespace notes
         {
             // Saves the current Gui.skin for later restore
             GUISkin _defGuiSkin = GUI.skin;
-            GUI.skin = _useKspSkin ? HighLogic.Skin : _defGuiSkin;
             if (_visible)
             {
+                GUI.skin = _useKspSkin ? HighLogic.Skin : _defGuiSkin;
                 _windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect, NotesWindow, "Notepad");
             }
             if (_showList)
