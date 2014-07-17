@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.9
+// notes.cs 0.9.2
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
