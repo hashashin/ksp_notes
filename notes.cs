@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.9.2
+// notes.cs 0.10
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -50,10 +50,10 @@ namespace notes
         private const string _logPrefix = "log_";
 
         // The "show it" text of toggle delete button.
-        private const string _showButtonDelText = "Show del button";
+        private const string _showButtonDelText = "Show delete";
 
         // The "hide it" text of toggle delete button.
-        private const string _hideButtonDelText = "Hide del button";
+        private const string _hideButtonDelText = "Hide delete";
 
         // The mouse button for open notes in the list on click 0=left 1=right 2=middle(default).
         private int _mouseButton = -1;
@@ -98,8 +98,12 @@ namespace notes
         // The second scroll view vector.
         private Vector2 _scrollViewVector2 = Vector2.zero;
 
+        private Vector2 _scrollViewVector3 = Vector2.zero;
+
         // The selection grid int for the notes list.
-        private int _selectionGridInt;
+        private int _selectFileGridInt;
+
+        private int _selectDirGridInt;
 
         // The text of the note.
         private string _text;
@@ -140,11 +144,18 @@ namespace notes
         //true use ksp skin, false use unity stock.
         private bool _useKspSkin;
 
+        private List<string> _dirs;
+
+        private string _newdir = "newdir";
+
+        private string _deldir = String.Empty;
+
+
         // Awakes the plugin.
         private void Awake()
         {
             LoadVersion();
-            _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") + "GameData/notes/Plugins/PluginData/notes/";
+
             VersionCheck();
             LoadSettings();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
@@ -154,11 +165,10 @@ namespace notes
         // Delete note action.
         private void Delete()
         {
-            File.Delete(_notesDir + _fileNames[_selectionGridInt] + _notesExt);
+            File.Delete(_notesDir + _fileNames[_selectFileGridInt] + _notesExt);
             if (!((HighLogic.LoadedScene == GameScenes.LOADING) || (HighLogic.LoadedScene == GameScenes.LOADINGBUFFER)))
             {
-                ScreenMessages.PostScreenMessage(_fileNames[_selectionGridInt] + ".txt DELETED!", 3f,
-                    ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage(_fileNames[_selectFileGridInt] + ".txt DELETED!", 3f);
             }
         }
 
@@ -217,6 +227,12 @@ namespace notes
             {
                 _fileNames[i] = Path.GetFileNameWithoutExtension(_fileNames[i]);
             }
+            _dirs = new List<string>(Directory.GetDirectories(_notesDir));
+
+            for (int i = 0; i < _dirs.Count; i++)
+            {
+                _dirs[i] = new DirectoryInfo(_dirs[i]).Name;
+            }
         }
 
         // List window.
@@ -226,34 +242,83 @@ namespace notes
         private void ListWindow(int windowId)
         {
             // Notes list gui.
-            _scrollViewVector2 = GUI.BeginScrollView(new Rect(3f, 25f, 255f, 300f), _scrollViewVector2,
-                new Rect(0f, 0f, 0f, 25f * (_fileNames.Count + 5)));
-            var _options = new[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
-            _selectionGridInt = GUILayout.SelectionGrid(_selectionGridInt, _fileNames.ToArray(), 1, _options);
-            GUI.EndScrollView();
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUILayout.BeginVertical();
             // Loads selected note in the list.
-            if (GUI.Button(new Rect(5f, 330f, 100f, 30f), "Load selected"))
+            if (GUILayout.Button("Load selected"))
             {
-                _file = _fileNames[_selectionGridInt];
+                _file = _fileNames[_selectFileGridInt];
                 Load();
                 _fileNames = null;
                 _showList = false;
             }
+            if (GUILayout.Button("Change Dir"))
+            {
+                if (_dirs.Count == 0)
+                {
+                    _notesDir = KSPUtil.ApplicationRootPath.Replace("\\", "/") +
+                                "GameData/notes/Plugins/PluginData/notes/";
+                    _fileNames = null;
+                    _showList = false;
+                    GetNotes();
+                    _showList = true;
+                }
+                else
+                {
+                    _notesDir = _notesDir + _dirs[_selectDirGridInt] + "/";
+                    _fileNames = null;
+                    _showList = false;
+                    GetNotes();
+                    _showList = true;
+                }
+            }
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Create Dir"))
+            {
+                Directory.CreateDirectory(_notesDir + _newdir);
+                _fileNames = null;
+                _showList = false;
+                GetNotes();
+                _showList = true;
+            }
+            _newdir = GUILayout.TextField(_newdir);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("Delete Dir"))
+            {
+                try
+                {
+                    Directory.Delete(_notesDir + _deldir);
+                }
+                catch (Exception e)
+                {
+                    ScreenMessages.PostScreenMessage("You need to write the name of the folder or empty it before try to delete.", 3f);
+                }
+                _fileNames = null;
+                _showList = false;
+                GetNotes();
+                _showList = true;
+            }
+            _deldir = GUILayout.TextField(_deldir);
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
             // Refresh the notes list.
-            if (GUI.Button(new Rect(115f, 330f, 30f, 30f), string.Empty))
+            var _reloadopts = new[] { GUILayout.ExpandHeight(false), GUILayout.ExpandWidth(false) };
+            if (GUILayout.Button(_reloadIconTex.texture, _reloadopts))
             {
                 _fileNames = null;
                 _showList = false;
                 GetNotes();
                 _showList = true;
             }
-            GUI.DrawTexture(new Rect(115f, 330f, 30f, 30f), _reloadIconTex.texture, ScaleMode.ScaleToFit, true, 0f);
+            GUILayout.BeginVertical();
             // Toggle the delete button visibility to avoid missclicks.
-            if (_toggleDel = GUI.Toggle(new Rect(75f, 360.5f, 115f, 20f), _toggleDel, _currentDelText))
+            if (_toggleDel = GUILayout.Toggle(_toggleDel, _currentDelText))
             {
                 GUI.contentColor = Color.red;
                 // Delete the selected note.
-                if (GUI.Button(new Rect(155f, 330f, 100f, 30f), "Delete"))
+                if (GUILayout.Button("Delete"))
                 {
                     Delete();
                     _fileNames = null;
@@ -263,23 +328,41 @@ namespace notes
                 }
                 GUI.contentColor = Color.white;
             }
-            // Close the list window.
-            if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            _scrollViewVector2 = GUILayout.BeginScrollView(_scrollViewVector2);
+            GUILayout.Label("Directories -- Current: " + new DirectoryInfo(_notesDir).Name);
+            var _options2 = new[] { GUILayout.Width(225f), GUILayout.ExpandWidth(false) };
+            _selectDirGridInt = GUILayout.SelectionGrid(_selectDirGridInt, _dirs.ToArray(), 1, _options2);
+            GUILayout.EndScrollView();
+            _scrollViewVector3 = GUILayout.BeginScrollView(_scrollViewVector3);
+            GUILayout.Label("Notes");
+            if (_fileNames != null)
             {
-                if (_showList)
+                _selectFileGridInt = GUILayout.SelectionGrid(_selectFileGridInt, _fileNames.ToArray(), 1, _options2);
+                GUILayout.EndScrollView();
+                GUILayout.EndHorizontal();
+                GUILayout.EndVertical();
+
+                // Close the list window.
+                if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
                 {
-                    _fileNames = null;
-                    _showList = false;
+                    if (_showList)
+                    {
+                        _fileNames = null;
+                        _showList = false;
+                    }
                 }
-            }
-            // detect middle clicks and load the clicked note if it's not already loaded.
-            if (Input.GetMouseButtonUp(_mouseButton))
-            {
-                if (_fileNames != null && !_fileNames[_selectionGridInt].Equals(_file))
+                // detect middle clicks and load the clicked note if it's not already loaded.
+                if (Input.GetMouseButtonUp(_mouseButton))
                 {
-                    Save();
-                    _file = _fileNames[_selectionGridInt];
-                    Load();
+                    if (_fileNames != null && !_fileNames[_selectFileGridInt].Equals(_file))
+                    {
+                        Save();
+                        _file = _fileNames[_selectFileGridInt];
+                        Load();
+                    }
                 }
             }
             // Makes the window dragable.
@@ -296,8 +379,7 @@ namespace notes
             // screen messages don't appear on those scenes
             else if ((HighLogic.LoadedScene != GameScenes.LOADING) && (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER))
             {
-                ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f,
-                    ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File don't exist: " + _file + _notesExt, 3f);
             }
         }
 
@@ -310,7 +392,7 @@ namespace notes
 
             _windowRect = _configFile.GetValue("main window position", new Rect(50f, 25f, 425f, 487f));
             _windowRect2 = _configFile.GetValue("list window position", new Rect(Screen.width / 2 - 150f,
-                                                                        Screen.height / 2 - 75f, 260f, 390f));
+                                                                        Screen.height / 2 - 75f, 520f, 390f));
             _keybind = _configFile.GetValue("keybind", "n");
             _versionLastRun = _configFile.GetValue<string>("version");
             _fontSize = _configFile.GetValue("font size", 13);
@@ -318,6 +400,8 @@ namespace notes
             _useKspSkin = _configFile.GetValue<bool>("use ksp skin");
             _visible = _configFile.GetValue<bool>("main window state");
             _mouseButton = _configFile.GetValue("mouse button", 2);
+            _notesDir = _configFile.GetValue("notesdir", KSPUtil.ApplicationRootPath.Replace("\\", "/") +
+                                                        "GameData/notes/Plugins/PluginData/notes/");
 
             print("[notes.dll] Config Loaded Successfully");
         }
@@ -396,20 +480,20 @@ namespace notes
             if (GUI.Button(new Rect(260f, 2f, 15f, 15f), "<"))
             {
                 GetNotes();
-                if (_selectionGridInt == 0) return;
-                _selectionGridInt--;
+                if (_selectFileGridInt == 0) return;
+                _selectFileGridInt--;
                 Save();
-                _file = _fileNames[_selectionGridInt];
+                _file = _fileNames[_selectFileGridInt];
                 Load();
             }
             GUI.Label(new Rect(275f, 0f, 60f, 20f), "Note");
             if (GUI.Button(new Rect(305f, 2f, 15f, 15f), ">"))
             {
                 GetNotes();
-                if (_selectionGridInt == _fileNames.Count - 1) return;
-                _selectionGridInt++;
+                if (_selectFileGridInt == _fileNames.Count - 1) return;
+                _selectFileGridInt++;
                 Save();
-                _file = _fileNames[_selectionGridInt];
+                _file = _fileNames[_selectFileGridInt];
                 Load();
             }
             // If we are on flight show the vessel logs buttons
@@ -495,8 +579,7 @@ namespace notes
             else
             {
                 ScreenMessages.PostScreenMessage(
-                    "Log for " + _vesselName + " don't exist, creating new: " + _logPrefix + _vesselName + _notesExt, 3f,
-                    ScreenMessageStyle.UPPER_CENTER);
+                    "Log for " + _vesselName + " don't exist, creating new: " + _logPrefix + _vesselName + _notesExt, 3f);
                 _file = _logPrefix + _vesselName;
                 _text = _vesselInfo;
                 Save();
@@ -509,7 +592,7 @@ namespace notes
             File.WriteAllText(_notesDir + _file + _notesExt, _text);
             if (HighLogic.LoadedScene != GameScenes.LOADINGBUFFER && HighLogic.LoadedScene != GameScenes.LOADING)
             {
-                ScreenMessages.PostScreenMessage("File saved: " + _file + _notesExt, 3f, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("File saved: " + _file + _notesExt, 3f);
             }
         }
 
@@ -528,6 +611,7 @@ namespace notes
             _configFile.SetValue("use ksp skin", _useKspSkin);
             _configFile.SetValue("main window state", _visible);
             _configFile.SetValue("mouse button", _mouseButton);
+            _configFile.SetValue("notesdir", _notesDir);
 
             _configFile.save();
             print("[notes.dll] Config Saved ");
@@ -549,7 +633,6 @@ namespace notes
             if (_visible)
             {
                 _visible = false;
-                _fileNames = null;
                 _showList = false;
                 _button.TexturePath = _btextureOff;
                 _button.ToolTip = _tooltipOff;
