@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.10
+// notes.cs 0.10.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2014 Iván Atienza
@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using KSP.IO;
@@ -85,6 +86,9 @@ namespace notes
 
         // The keybind.
         private string _keybind;
+
+        //linux workaround keybind
+        private string _keybind2;
 
         // true to show the notes list window, false to hide.
         private bool _showList;
@@ -202,9 +206,9 @@ namespace notes
 
             const string _separator =
                 "------------------------------------------------------------------------------------------------";
-            string _metY = FlightLogger.met_years.ToString();
-            string _metD = FlightLogger.met_days.ToString();
-            string _metH = FlightLogger.met_hours.ToString();
+            string _metY = FlightLogger.met_years.ToString(CultureInfo.InvariantCulture);
+            string _metD = FlightLogger.met_days.ToString(CultureInfo.InvariantCulture);
+            string _metH = FlightLogger.met_hours.ToString(CultureInfo.InvariantCulture);
             string _metM = FlightLogger.met_mins.ToString("00");
             string _metS = FlightLogger.met_secs.ToString("00");
             string _situation = Vessel.GetSituationString(FlightGlobals.ActiveVessel);
@@ -291,7 +295,7 @@ namespace notes
                 {
                     Directory.Delete(_notesDir + _deldir);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     ScreenMessages.PostScreenMessage("You need to write the name of the folder or empty it before try to delete.", 3f);
                 }
@@ -394,6 +398,7 @@ namespace notes
             _windowRect2 = _configFile.GetValue("list window position", new Rect(Screen.width / 2 - 150f,
                                                                         Screen.height / 2 - 75f, 520f, 390f));
             _keybind = _configFile.GetValue("keybind", "n");
+            _keybind2 = _configFile.GetValue("keybind2", "l");
             _versionLastRun = _configFile.GetValue<string>("version");
             _fontSize = _configFile.GetValue("font size", 13);
             _file = _configFile.GetValue("last note opened", "notes");
@@ -521,15 +526,7 @@ namespace notes
             {
                 if (GUI.Toggle(new Rect(200f, 452f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
                 {
-                    _toggleInput = !_toggleInput;
-                    if (_toggleInput)
-                    {
-                        InputLockManager.SetControlLock(_blockAllControls, "notes");
-                    }
-                    else
-                    {
-                        InputLockManager.RemoveControlLock("notes");
-                    }
+                    toggleLock();
                 }
             }
             // Make this window dragable
@@ -605,6 +602,7 @@ namespace notes
             _configFile.SetValue("main window position", _windowRect);
             _configFile.SetValue("list window position", _windowRect2);
             _configFile.SetValue("keybind", _keybind);
+            _configFile.SetValue("keybind2", _keybind2);
             _configFile.SetValue("version", _version);
             _configFile.SetValue("font size", _fontSize);
             _configFile.SetValue("last note opened", _file);
@@ -645,12 +643,29 @@ namespace notes
             }
         }
 
+        private void toggleLock()
+        {
+            _toggleInput = !_toggleInput;
+            if (_toggleInput)
+            {
+                InputLockManager.SetControlLock(_blockAllControls, "notes");
+            }
+            else
+            {
+                InputLockManager.RemoveControlLock("notes");
+            }
+        }
+
         // Detect the binded key press.
         private void Update()
         {
             if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind))
             {
                 Toggle();
+            }
+            if (Input.GetKey(KeyCode.LeftAlt) && Input.GetKeyDown(_keybind2) && _visible && Application.platform == RuntimePlatform.LinuxPlayer)
+            {
+                toggleLock();
             }
         }
 
