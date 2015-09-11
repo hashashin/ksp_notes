@@ -1,8 +1,8 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.10.1
+// notes.cs 0.11
 //
 // Simple KSP plugin to take notes ingame.
-// Copyright (C) 2014 Iván Atienza
+// Copyright (C) 2015 Iván Atienza
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ namespace notes
         private int _selectDirGridInt;
 
         // The text of the note.
-        private string _text;
+        public static string _text;
 
         // true to show delete button, false to hide.
         private bool _toggleDel;
@@ -131,10 +131,10 @@ namespace notes
         private string _versionLastRun;
 
         // The vessel info.
-        private string _vesselInfo;
+        public static string _vesselInfo;
 
         // The vessel name.
-        private string _vesselName;
+        private static string _vesselName;
 
         // true to show the plugin window, false to hide.
         private bool _visible;
@@ -145,6 +145,15 @@ namespace notes
         // The rectangle for list windows.
         private Rect _windowRect2;
 
+        // rectangles for the dialogs windows
+        private Rect _windowRect3; //delete
+
+        private Rect _windowRect4; //delete directory
+
+        private Rect _windowRect5; //reload note
+
+        private Rect _windowRect6; //new note
+
         //true use ksp skin, false use unity stock.
         private bool _useKspSkin;
 
@@ -152,7 +161,10 @@ namespace notes
 
         private string _newdir = "newdir";
 
-        private string _deldir = String.Empty;
+        private bool _showdeldial;
+        private bool _showdeldirdial;
+        private bool _showreloaddial;
+        private bool _shownewnotedial;
 
 
         // Awakes the plugin.
@@ -175,9 +187,74 @@ namespace notes
                 ScreenMessages.PostScreenMessage(_fileNames[_selectFileGridInt] + ".txt DELETED!", 3f);
             }
         }
+        // Delete note dialog
+        private void DelWindow(int windowId)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUI.contentColor = Color.red;
+            GUILayout.Label("Are you sure want to delete: " + _fileNames[_selectFileGridInt] + "?");
+            GUI.contentColor = Color.white;
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Yes"))
+            {
+                Delete();
+                _fileNames = null;
+                _showList = false;
+                GetNotes();
+                _showList = true;
+                _showdeldial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("No"))
+            {
+                _showdeldial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow();
+        }
+        //delete directory dialog
+        private void DelDirWindow(int windowId)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUI.contentColor = Color.red;
+            GUILayout.Label("Are you sure want to delete: " + _dirs[_selectDirGridInt] + "?");
+            GUI.contentColor = Color.white;
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Yes"))
+            {
+                try
+                {
+                    Directory.Delete(_notesDir + _dirs[_selectDirGridInt]);
+                }
+                catch (Exception)
+                {
+                    ScreenMessages.PostScreenMessage("You need empty the folder before try to delete it.", 3f);
+                }
+                _fileNames = null;
+                _showList = false;
+                GetNotes();
+                _showList = true;
+                _showdeldirdial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("No"))
+            {
+                _showdeldirdial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow();
+        }
 
         // Get vessel log information.
-        private void GetLogInfo()
+        public static void GetLogInfo()
         {
             if (!HighLogic.LoadedSceneIsFlight || !HighLogic.LoadedSceneHasPlanetarium) return;
             double _seconds = Planetarium.GetUniversalTime();
@@ -250,14 +327,14 @@ namespace notes
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical();
             // Loads selected note in the list.
-            if (GUILayout.Button("Load selected"))
+            if (GUILayout.Button("Load Selected File"))
             {
                 _file = _fileNames[_selectFileGridInt];
                 Load();
                 _fileNames = null;
                 _showList = false;
             }
-            if (GUILayout.Button("Change Dir"))
+            if (GUILayout.Button("Change to Selected Directory"))
             {
                 if (_dirs.Count == 0)
                 {
@@ -278,7 +355,7 @@ namespace notes
                 }
             }
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Create Dir"))
+            if (GUILayout.Button("Create Directory"))
             {
                 Directory.CreateDirectory(_notesDir + _newdir);
                 _fileNames = null;
@@ -289,22 +366,23 @@ namespace notes
             _newdir = GUILayout.TextField(_newdir);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button("Delete Dir"))
+            GUI.contentColor = Color.red;
+            if (_dirs.Count > 0)
             {
-                try
+                if (GUILayout.Button("Delete Directory"))
                 {
-                    Directory.Delete(_notesDir + _deldir);
+                    _showdeldirdial = true;
                 }
-                catch (Exception)
-                {
-                    ScreenMessages.PostScreenMessage("You need to write the name of the folder or empty it before try to delete.", 3f);
-                }
-                _fileNames = null;
-                _showList = false;
-                GetNotes();
-                _showList = true;
             }
-            _deldir = GUILayout.TextField(_deldir);
+            // Delete the selected note.
+            if (_fileNames.Count > 0)
+            {
+                if (GUILayout.Button("Delete File"))
+                {
+                    _showdeldial = true;
+                }
+            }
+            GUI.contentColor = Color.white;
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
             // Refresh the notes list.
@@ -316,23 +394,6 @@ namespace notes
                 GetNotes();
                 _showList = true;
             }
-            GUILayout.BeginVertical();
-            // Toggle the delete button visibility to avoid missclicks.
-            if (_toggleDel = GUILayout.Toggle(_toggleDel, _currentDelText))
-            {
-                GUI.contentColor = Color.red;
-                // Delete the selected note.
-                if (GUILayout.Button("Delete"))
-                {
-                    Delete();
-                    _fileNames = null;
-                    _showList = false;
-                    GetNotes();
-                    _showList = true;
-                }
-                GUI.contentColor = Color.white;
-            }
-            GUILayout.EndVertical();
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             _scrollViewVector2 = GUILayout.BeginScrollView(_scrollViewVector2);
@@ -395,8 +456,13 @@ namespace notes
             _configFile.load();
 
             _windowRect = _configFile.GetValue("main window position", new Rect(50f, 25f, 425f, 487f));
-            _windowRect2 = _configFile.GetValue("list window position", new Rect(Screen.width / 2 - 150f,
-                                                                        Screen.height / 2 - 75f, 520f, 390f));
+            _windowRect2 = _configFile.GetValue("list window position", new Rect(Screen.width / 2f - 150f,
+                                                                        Screen.height / 2f - 75f, 520f, 390f));
+            _windowRect3 = _configFile.GetValue("del dialog position", new Rect(Screen.width / 2f - 150f,
+                                                                        Screen.height / 2f - 75f, 220f, 100f));
+            _windowRect4 = _windowRect3;
+            _windowRect5 = _windowRect3;
+            _windowRect6 = _windowRect3;
             _keybind = _configFile.GetValue("keybind", "n");
             _keybind2 = _configFile.GetValue("keybind2", "l");
             _versionLastRun = _configFile.GetValue<string>("version");
@@ -437,9 +503,9 @@ namespace notes
             // Show the actual note file name.
             _file = GUI.TextField(new Rect(5f, 410f, 150f, 20f), _file);
             // Load note file button.
-            if (GUI.Button(new Rect(155f, 410f, 80f, 30f), "Load"))
+            if (GUI.Button(new Rect(155f, 410f, 80f, 30f), "Reload"))
             {
-                Load();
+                _showreloaddial = true;
             }
             // Save note file button.
             if (GUI.Button(new Rect(235f, 410f, 80f, 30f), "Save"))
@@ -458,6 +524,11 @@ namespace notes
                     GetNotes();
                     _showList = true;
                 }
+            }
+            //New file
+            if (GUI.Button(new Rect(155f, 445f, 80f, 30f), "New Note"))
+            {
+                _shownewnotedial = true;
             }
             // Close the notes window.
             if (GUI.Button(new Rect(2f, 2f, 13f, 13f), "X"))
@@ -501,6 +572,7 @@ namespace notes
                 _file = _fileNames[_selectFileGridInt];
                 Load();
             }
+            GUI.Label(new Rect(340f, 0f, 60, 20f), _version);
             // If we are on flight show the vessel logs buttons
             if (HighLogic.LoadedSceneIsFlight && HighLogic.LoadedSceneHasPlanetarium)
             {
@@ -532,6 +604,57 @@ namespace notes
             // Make this window dragable
             GUI.DragWindow();
         }
+        //reload dialog
+        private void Reloaddial(int windowId)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUI.contentColor = Color.red;
+            GUILayout.Label("Are you sure want to load/reload: " + _file + "? Unsaved changes will be lost!");
+            GUI.contentColor = Color.white;
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Yes"))
+            {
+                Load();
+                _showreloaddial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("No"))
+            {
+                _showreloaddial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow();
+        }
+        //new note dialog
+        private void NewFiledial(int windowId)
+        {
+            GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            GUI.contentColor = Color.red;
+            GUILayout.Label("Are you sure want to create new file? Unsaved changes will be lost!");
+            GUI.contentColor = Color.white;
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("Yes"))
+            {
+                _file = "newnote";
+                _text = String.Empty;
+                _shownewnotedial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.BeginVertical();
+            if (GUILayout.Button("No"))
+            {
+                _shownewnotedial = false;
+            }
+            GUILayout.EndVertical();
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow();
+        }
 
         // Executes the destroy action.
         private void OnDestroy()
@@ -559,6 +682,26 @@ namespace notes
                 _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
                     "Notes list");
                 UpdateDelButtonText();
+            }
+            if (_showdeldial)
+            {
+                _windowRect3 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect3, DelWindow,
+                    "File Deletion Dialog");
+            }
+            if (_showdeldirdial)
+            {
+                _windowRect4 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect4, DelDirWindow,
+                    "Directory Deletion Dialog");
+            }
+            if (_showreloaddial)
+            {
+                _windowRect5 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect5, Reloaddial,
+                   "File Reload Dialog");
+            }
+            if (_shownewnotedial)
+            {
+                _windowRect6 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect6, NewFiledial,
+                   "New File Dialog");
             }
             //Restore the skin
             GUI.skin = _defGuiSkin;
@@ -601,6 +744,7 @@ namespace notes
 
             _configFile.SetValue("main window position", _windowRect);
             _configFile.SetValue("list window position", _windowRect2);
+            _configFile.SetValue("del dialog position", _windowRect3);
             _configFile.SetValue("keybind", _keybind);
             _configFile.SetValue("keybind2", _keybind2);
             _configFile.SetValue("version", _version);
