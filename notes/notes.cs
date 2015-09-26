@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.11
+// notes.cs 0.12
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2015 Iván Atienza
@@ -92,7 +92,7 @@ namespace notes
 
         // true to show the notes list window, false to hide.
         private bool _showList;
-
+        
         // The reload icon texture.
         private WWW _reloadIconTex;
 
@@ -110,7 +110,7 @@ namespace notes
         private int _selectDirGridInt;
 
         // The text of the note.
-        public static string _text;
+        public string _text;
 
         // true to show delete button, false to hide.
         private bool _toggleDel;
@@ -131,10 +131,10 @@ namespace notes
         private string _versionLastRun;
 
         // The vessel info.
-        public static string _vesselInfo;
+        public string _vesselInfo;
 
         // The vessel name.
-        private static string _vesselName;
+        private string _vesselName;
 
         // true to show the plugin window, false to hide.
         private bool _visible;
@@ -254,7 +254,7 @@ namespace notes
         }
 
         // Get vessel log information.
-        public static void GetLogInfo()
+        public void GetLogInfo()
         {
             if (!HighLogic.LoadedSceneIsFlight || !HighLogic.LoadedSceneHasPlanetarium) return;
             double _seconds = Planetarium.GetUniversalTime();
@@ -555,22 +555,12 @@ namespace notes
             }
             if (GUI.Button(new Rect(260f, 2f, 15f, 15f), "<"))
             {
-                GetNotes();
-                if (_selectFileGridInt == 0) return;
-                _selectFileGridInt--;
-                Save();
-                _file = _fileNames[_selectFileGridInt];
-                Load();
+                SelectNote(false);
             }
             GUI.Label(new Rect(275f, 0f, 60f, 20f), "Note");
             if (GUI.Button(new Rect(305f, 2f, 15f, 15f), ">"))
             {
-                GetNotes();
-                if (_selectFileGridInt == _fileNames.Count - 1) return;
-                _selectFileGridInt++;
-                Save();
-                _file = _fileNames[_selectFileGridInt];
-                Load();
+                SelectNote(true);
             }
             GUI.Label(new Rect(340f, 0f, 60, 20f), _version);
             // If we are on flight show the vessel logs buttons
@@ -776,12 +766,14 @@ namespace notes
             {
                 _visible = false;
                 _showList = false;
+                if (!ToolbarManager.ToolbarAvailable) return;
                 _button.TexturePath = _btextureOff;
                 _button.ToolTip = _tooltipOff;
             }
             else
             {
                 _visible = true;
+                if (!ToolbarManager.ToolbarAvailable) return;
                 _button.TexturePath = _btextureOn;
                 _button.ToolTip = _tooltipOn;
             }
@@ -832,6 +824,29 @@ namespace notes
             }
             if (_version == _versionLastRun || !File.Exists(_notesDir + "config.xml")) return;
             File.Delete(_notesDir + "config.xml");
+        }
+
+        public void SelectNote(bool direction)
+        {
+            if (!direction)
+            {
+                GetNotes();
+                if (_selectFileGridInt == 0) return;
+                _selectFileGridInt--;
+                Save();
+                _file = _fileNames[_selectFileGridInt];
+                Load();
+            }
+            GUI.Label(new Rect(275f, 0f, 60f, 20f), "Note");
+            if (direction)
+            {
+                GetNotes();
+                if (_selectFileGridInt == _fileNames.Count - 1) return;
+                _selectFileGridInt++;
+                Save();
+                _file = _fileNames[_selectFileGridInt];
+                Load();
+            }
         }
     }
 }
