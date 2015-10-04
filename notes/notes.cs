@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.12
+// notes.cs 0.12.1
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2015 Iván Atienza
@@ -497,8 +497,12 @@ namespace notes
             _scrollViewVector = GUI.BeginScrollView(new Rect(0f, 25f, 420f, 380f), _scrollViewVector,
                 new Rect(0f, 0f, 400f, 5300f));
             // Configurable font size, independent from the skin.
-            GUIStyle _myStyle = new GUIStyle(GUI.skin.textArea) { fontSize = _fontSize };
-            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, _myStyle);
+            GUIStyle myStyle = new GUIStyle(GUI.skin.textArea)
+            {
+                fontSize = _fontSize,
+                richText = true
+            };
+            _text = GUI.TextArea(new Rect(3f, 0f, 400f, 5300f), _text, myStyle);
             GUI.EndScrollView();
             // Show the actual note file name.
             _file = GUI.TextField(new Rect(5f, 410f, 150f, 20f), _file);

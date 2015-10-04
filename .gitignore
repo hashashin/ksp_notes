@@ -156,3 +156,4 @@ $RECYCLE.BIN/
 .DS_Store
 GameData/notes/Plugins/notes.dll
 GameData/notes/Plugins/notesRPM.dll
+*.zip
