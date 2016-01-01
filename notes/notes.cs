@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.12.1
+// notes.cs 0.12.2
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2015 Iván Atienza
@@ -590,7 +590,7 @@ namespace notes
             // Workaround for http://bugs.kerbalspaceprogram.com/issues/1230
             if (Application.platform == RuntimePlatform.LinuxPlayer)
             {
-                if (GUI.Toggle(new Rect(200f, 452f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
+                if (GUI.Toggle(new Rect(255f, 452f, 150f, 20f), _toggleInput, "Toggle input lock") != _toggleInput)
                 {
                     toggleLock();
                 }
