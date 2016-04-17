@@ -2,7 +2,7 @@
 // notesRPM.cs 0.1
 //
 // Simple KSP plugin to take notes ingame.
-// Copyright (C) 2015 Iván Atienza
+// Copyright (C) 2016 Iván Atienza
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
