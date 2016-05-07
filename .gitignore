@@ -157,3 +157,4 @@ $RECYCLE.BIN/
 GameData/notes/Plugins/notes.dll
 GameData/notes/Plugins/notesRPM.dll
 *.zip
+*.scgdat
