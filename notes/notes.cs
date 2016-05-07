@@ -1,8 +1,8 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.12.2
+// notes.cs 0.13
 //
 // Simple KSP plugin to take notes ingame.
-// Copyright (C) 2015 Iván Atienza
+// Copyright (C) 2016 Iván Atienza
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -283,20 +283,19 @@ namespace notes
 
             const string _separator =
                 "------------------------------------------------------------------------------------------------";
-            string _metY = FlightLogger.met_years.ToString(CultureInfo.InvariantCulture);
-            string _metD = FlightLogger.met_days.ToString(CultureInfo.InvariantCulture);
-            string _metH = FlightLogger.met_hours.ToString(CultureInfo.InvariantCulture);
-            string _metM = FlightLogger.met_mins.ToString("00");
-            string _metS = FlightLogger.met_secs.ToString("00");
+            TimeSpan diff = TimeSpan.FromSeconds(FlightGlobals.ActiveVessel.missionTime);
+            string _formatted = string.Format(
+                  CultureInfo.CurrentCulture,
+                  "{0}y, {1}d, {2}:{3}:{4}",
+                  diff.Days / 365,
+                  (diff.Days - (diff.Days / 365) * 365) - ((diff.Days - (diff.Days / 365) * 365) / 30) * 30,
+                  diff.Hours.ToString("00"),
+                  diff.Minutes.ToString("00"),
+                  diff.Seconds.ToString("00"));
             string _situation = Vessel.GetSituationString(FlightGlobals.ActiveVessel);
             _vesselInfo =
-                "\n" +
-                _separator + "\n" +
-                _vesselName + " --- Year: " + _ryears + " Day: " + _rdays + " Time: "
-                + _hours + ":" + _minutes.ToString("00") + ":" + _seconds.ToString("00") + "\n" +
-                "MET: " + _metY + "y " + _metD + "d " + _metH + ":" + _metM + ":" + _metS +
-                " --- Status: " + _situation + "\n" +
-                _separator + "\n";
+                string.Format("\n{0}\n{1} --- Year: {2} Day: {3} Time: {4}:{5}:{6}\n" + "MET: {7} --- Status: {8}\n{0}\n", 
+                    _separator, _vesselName, _ryears, _rdays, _hours, _minutes.ToString("00"), _seconds.ToString("00"), _formatted, _situation);
         }
 
         // Get list of the notes.
@@ -604,7 +603,7 @@ namespace notes
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUI.contentColor = Color.red;
-            GUILayout.Label("Are you sure want to load/reload: " + _file + "? Unsaved changes will be lost!");
+            GUILayout.Label($"Are you sure want to load/reload: {_file}? Unsaved changes will be lost!");
             GUI.contentColor = Color.white;
             GUILayout.BeginVertical();
             if (GUILayout.Button("Yes"))
