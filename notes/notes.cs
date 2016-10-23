@@ -840,7 +840,6 @@ namespace notes
                 _file = _fileNames[_selectFileGridInt];
                 Load();
             }
-            GUI.Label(new Rect(275f, 0f, 60f, 20f), "Note");
             if (direction)
             {
                 GetNotes();

@@ -47,9 +47,9 @@ namespace notesRPM
 
         //kOS Fields
         [KSPField]
-        public string textTint = "[#009900ff]";
+        public string textTint = "<color=#009900ff>";
         [KSPField]
-        public string textTintUnpowered = "[#ffffff3e]";
+        public string textTintUnpowered = "<color=#ffffff3e>";
         [KSPField]
         public int consoleWidth = 40;
         [KSPField]
