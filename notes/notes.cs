@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notes.cs 0.13
+// notes.cs 0.14
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2016 Iván Atienza
@@ -294,8 +294,8 @@ namespace notes
                   diff.Seconds.ToString("00"));
             string _situation = Vessel.GetSituationString(FlightGlobals.ActiveVessel);
             _vesselInfo =
-                string.Format("\n{0}\n{1} --- Year: {2} Day: {3} Time: {4}:{5}:{6}\n" + "MET: {7} --- Status: {8}\n{0}\n", 
-                    _separator, _vesselName, _ryears, _rdays, _hours, _minutes.ToString("00"), _seconds.ToString("00"), _formatted, _situation);
+                string.Format("\n{0}\n{1} --- Year: {2} Day: {3} Time: {4}:{5:00}:{6:00}\n" + "MET: {7} --- Status: {8}\n{0}\n", 
+                    _separator, _vesselName, _ryears, _rdays, _hours, _minutes, _seconds, _formatted, _situation);
         }
 
         // Get list of the notes.
