@@ -1,5 +1,5 @@
 ﻿// -------------------------------------------------------------------------------------------------
-// notesRPM.cs 0.1
+// notesRPM.cs 0.2
 //
 // Simple KSP plugin to take notes ingame.
 // Copyright (C) 2016 Iván Atienza
