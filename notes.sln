@@ -1,13 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "notes", "notes\notes.csproj", "{2C8D5E92-19CD-499C-916D-BCB41FBC42FC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "notesRPM", "notesRPM\notesRPM.csproj", "{8B2F9614-11C3-45E3-AA5C-FBEDBFDA3B2D}"
 	ProjectSection(ProjectDependencies) = postProject
 		{2C8D5E92-19CD-499C-916D-BCB41FBC42FC} = {2C8D5E92-19CD-499C-916D-BCB41FBC42FC}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EF3911BC-A119-4306-B5B7-39E4B4C6B2BA}"
+	ProjectSection(SolutionItems) = preProject
+		buildRelease.bat = buildRelease.bat
+		ChangeLog.txt = ChangeLog.txt
+		deploy.bat = deploy.bat
+		jenkins.txt = jenkins.txt
+		ksp_notes.version = ksp_notes.version
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
@@ -28,6 +38,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {181D289A-BDC7-4A6C-B4C3-9019B0E0CCFB}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		version = 0.14

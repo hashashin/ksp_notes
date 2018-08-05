@@ -1,0 +1,6 @@
+0.14.2
+	Updated by Linuxgurugamer
+		Added support for the ToolbarController
+		Added build scripts
+		Added .version file
+		Added AssemblyVersion.cs to both DLLs

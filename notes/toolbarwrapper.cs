@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-
+#if false
 // TODO: Change to your plugin's namespace here.
 namespace notes
 {
@@ -90,7 +90,7 @@ namespace notes
 		}
 	}
 
-	#region interfaces
+#region interfaces
 
 	/// <summary>
 	/// A toolbar manager.
@@ -337,9 +337,9 @@ namespace notes
 		Vector2 Draw(Vector2 position);
 	}
 
-	#endregion
+#endregion
 
-	#region events
+#region events
 
 	/// <summary>
 	/// Event describing a click on a button.
@@ -403,9 +403,9 @@ namespace notes
 	/// <param name="e">An event describing the mouse pointer leaving.</param>
 	public delegate void MouseLeaveHandler(MouseLeaveEvent e);
 
-	#endregion
+#endregion
 
-	#region visibility
+#region visibility
 
 	/// <summary>
 	/// Determines visibility of a button.
@@ -454,9 +454,9 @@ namespace notes
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region drawable
+#region drawable
 
 	/// <summary>
 	/// A drawable that draws a popup menu.
@@ -536,9 +536,9 @@ namespace notes
 		}
 	}
 
-	#endregion
+#endregion
 
-	#region private implementations
+#region private implementations
 
 	public partial class ToolbarManager : IToolbarManager
 	{
@@ -894,5 +894,7 @@ namespace notes
 		}
 	}
 
-	#endregion
+#endregion
 }
+
+#endif
