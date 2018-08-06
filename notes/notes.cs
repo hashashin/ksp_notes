@@ -36,17 +36,7 @@ using ToolbarControl_NS;
 
 namespace notes
 {
-
-    [KSPAddon(KSPAddon.Startup.MainMenu, true)]
-    public class RegisterToolbar : MonoBehaviour
-    {
-        void Start()
-        {
-            ToolbarControl.RegisterMod(Notes.MODID, Notes.MODNAME);
-        }
-    }
-
-    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     public class Notes : MonoBehaviour
     {
         // Define the controls to block.
@@ -190,6 +180,7 @@ namespace notes
             LoadSettings();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
             _reloadIconTex = new WWW(_reloadIconUrl);
+            DontDestroyOnLoad(this);
         }
 
         // Delete note action.
@@ -201,6 +192,7 @@ namespace notes
                 ScreenMessages.PostScreenMessage(_fileNames[_selectFileGridInt] + ".txt DELETED!", 3f);
             }
         }
+
         // Delete note dialog
         private void DelWindow(int windowId)
         {
@@ -230,6 +222,7 @@ namespace notes
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
         //delete directory dialog
         private void DelDirWindow(int windowId)
         {
@@ -636,6 +629,7 @@ namespace notes
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
         //new note dialog
         private void NewFiledial(int windowId)
         {
@@ -785,30 +779,33 @@ namespace notes
 
         internal const string MODID = "Notes_NS";
         internal const string MODNAME = "Notes";
-        ToolbarControl toolbarControl;
+        ToolbarControl toolbarControl = null;
 
         private void CreateButtonIcon()
         {
-            toolbarControl = gameObject.AddComponent<ToolbarControl>();
-            toolbarControl.AddToAllToolbars(Toggle, Toggle,
-                ApplicationLauncher.AppScenes.ALWAYS,
-                MODID,
-                "notesButton",
-                _btextureOff + "_38",
-                _btextureOff + "_24",
-                MODNAME
-            );
+            if (toolbarControl == null)
+            {
+                toolbarControl = gameObject.AddComponent<ToolbarControl>();
+                toolbarControl.AddToAllToolbars(Toggle, Toggle,
+                    ApplicationLauncher.AppScenes.ALWAYS,
+                    MODID,
+                    "notesButton",
+                    _btextureOff + "_38",
+                    _btextureOff + "_24",
+                    MODNAME
+                );
+            }
         }
-    
 
-    // Toggles plugin visibility.
-    private void Toggle()
+
+        // Toggles plugin visibility.
+        private void Toggle()
         {
             if (_visible)
             {
                 _visible = false;
                 _showList = false;
-                toolbarControl.SetTexture(_btextureOff + "_38",_btextureOff + "_24");
+                toolbarControl.SetTexture(_btextureOff + "_38", _btextureOff + "_24");
 #if false
                 if (!ToolbarManager.ToolbarAvailable) return;
                 _button.TexturePath = _btextureOff;

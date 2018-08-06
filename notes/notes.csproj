@@ -69,6 +69,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AssemblyVersion.tt</DependentUpon>
     </Compile>
+    <Compile Include="RegisterToolbar.cs" />
     <Compile Include="toolbarwrapper.cs" />
     <Compile Include="notes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
