@@ -31,9 +31,12 @@ using KSP.IO;
 using UnityEngine;
 using File = System.IO.File;
 
+using KSP.UI.Screens;
+using ToolbarControl_NS;
+
 namespace notes
 {
-    [KSPAddon(KSPAddon.Startup.EveryScene, false)]
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     public class Notes : MonoBehaviour
     {
         // Define the controls to block.
@@ -72,9 +75,10 @@ namespace notes
         // The toolbar texture on.
         private const string _btextureOn = "notes/Textures/icon_on";
 
+#if false
         // The button for the toolbar.
         private IButton _button;
-
+#endif
         // The current delete toggle button text.
         private string _currentDelText;
 
@@ -176,6 +180,7 @@ namespace notes
             LoadSettings();
             _text = File.ReadAllText(_notesDir + _file + _notesExt);
             _reloadIconTex = new WWW(_reloadIconUrl);
+            DontDestroyOnLoad(this);
         }
 
         // Delete note action.
@@ -187,6 +192,7 @@ namespace notes
                 ScreenMessages.PostScreenMessage(_fileNames[_selectFileGridInt] + ".txt DELETED!", 3f);
             }
         }
+
         // Delete note dialog
         private void DelWindow(int windowId)
         {
@@ -216,6 +222,7 @@ namespace notes
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
         //delete directory dialog
         private void DelDirWindow(int windowId)
         {
@@ -622,6 +629,7 @@ namespace notes
             GUILayout.EndVertical();
             GUI.DragWindow();
         }
+
         //new note dialog
         private void NewFiledial(int windowId)
         {
@@ -654,10 +662,14 @@ namespace notes
         {
             Save();
             SaveSettings();
+#if false
             if (_button != null)
             {
                 _button.Destroy();
             }
+#endif
+            toolbarControl.OnDestroy();
+            Destroy(toolbarControl);
         }
 
         // Executes the graphical user interface action.
@@ -755,12 +767,36 @@ namespace notes
         // Start toolbar if present.
         private void Start()
         {
+            CreateButtonIcon();
+#if false
             if (!ToolbarManager.ToolbarAvailable) return;
             _button = ToolbarManager.Instance.add("notes", "toggle");
             _button.TexturePath = _btextureOff;
             _button.ToolTip = _tooltipOff;
             _button.OnClick += e => Toggle();
+#endif
         }
+
+        internal const string MODID = "Notes_NS";
+        internal const string MODNAME = "Notes";
+        ToolbarControl toolbarControl = null;
+
+        private void CreateButtonIcon()
+        {
+            if (toolbarControl == null)
+            {
+                toolbarControl = gameObject.AddComponent<ToolbarControl>();
+                toolbarControl.AddToAllToolbars(Toggle, Toggle,
+                    ApplicationLauncher.AppScenes.ALWAYS,
+                    MODID,
+                    "notesButton",
+                    _btextureOff + "_38",
+                    _btextureOff + "_24",
+                    MODNAME
+                );
+            }
+        }
+
 
         // Toggles plugin visibility.
         private void Toggle()
@@ -769,16 +805,22 @@ namespace notes
             {
                 _visible = false;
                 _showList = false;
+                toolbarControl.SetTexture(_btextureOff + "_38", _btextureOff + "_24");
+#if false
                 if (!ToolbarManager.ToolbarAvailable) return;
                 _button.TexturePath = _btextureOff;
                 _button.ToolTip = _tooltipOff;
+#endif
             }
             else
             {
                 _visible = true;
+                toolbarControl.SetTexture(_btextureOn + "_38", _btextureOn + "_24");
+#if false
                 if (!ToolbarManager.ToolbarAvailable) return;
                 _button.TexturePath = _btextureOn;
                 _button.ToolTip = _tooltipOn;
+#endif
             }
         }
 

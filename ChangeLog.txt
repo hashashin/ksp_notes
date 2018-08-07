@@ -1,0 +1,10 @@
+0.14.2.1
+	Fixed multiple buttons going onto the toolbar
+	Changed from reloading every scene, to load once when the SpaceCenter is loaded and keep in memory
+
+0.14.2
+	Updated by Linuxgurugamer
+		Added support for the ToolbarController
+		Added build scripts
+		Added .version file
+		Added AssemblyVersion.cs to both DLLs
