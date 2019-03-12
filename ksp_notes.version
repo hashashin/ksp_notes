@@ -1,9 +1,9 @@
 {
   "NAME": "Notes",
-  "URL": "https://raw.githubusercontent.com/linuxgurugamer/ksp_notes/master/ksp_notes.version",
-    "DOWNLOAD": "https://github.com/linuxgurugamer/ksp_notes/releases",
+  "URL": "https://raw.githubusercontent.com/hashashin/ksp_notes/master/ksp_notes.version",
+  "DOWNLOAD": "https://github.com/hashashin/ksp_notes/releases",
   "GITHUB": {
-    "USERNAME": "linuxgurugamer",
+    "USERNAME": "hashashin",
     "REPOSITORY": "ksp_notes"
   },
   "VERSION": {
