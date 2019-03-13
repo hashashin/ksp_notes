@@ -33,6 +33,7 @@ using File = System.IO.File;
 
 using KSP.UI.Screens;
 using ToolbarControl_NS;
+using ClickThroughFix;
 
 namespace notes
 {
@@ -680,32 +681,32 @@ namespace notes
             if (_visible)
             {
                 GUI.skin = _useKspSkin ? HighLogic.Skin : _defGuiSkin;
-                _windowRect = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect, NotesWindow, "Notepad");
+                _windowRect = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect, NotesWindow, "Notepad");
             }
             if (_showList)
             {
-                _windowRect2 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
+                _windowRect2 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect2, ListWindow,
                     "Notes list");
                 UpdateDelButtonText();
             }
             if (_showdeldial)
             {
-                _windowRect3 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect3, DelWindow,
+                _windowRect3 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect3, DelWindow,
                     "File Deletion Dialog");
             }
             if (_showdeldirdial)
             {
-                _windowRect4 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect4, DelDirWindow,
+                _windowRect4 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect4, DelDirWindow,
                     "Directory Deletion Dialog");
             }
             if (_showreloaddial)
             {
-                _windowRect5 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect5, Reloaddial,
+                _windowRect5 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect5, Reloaddial,
                    "File Reload Dialog");
             }
             if (_shownewnotedial)
             {
-                _windowRect6 = GUI.Window(GUIUtility.GetControlID(FocusType.Passive), _windowRect6, NewFiledial,
+                _windowRect6 = ClickThruBlocker.GUIWindow(GUIUtility.GetControlID(FocusType.Passive), _windowRect6, NewFiledial,
                    "New File Dialog");
             }
             //Restore the skin
