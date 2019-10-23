@@ -28,7 +28,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-#if false
+
 // TODO: Change to your plugin's namespace here.
 namespace notes
 {
@@ -90,7 +90,7 @@ namespace notes
 		}
 	}
 
-#region interfaces
+	#region interfaces
 
 	/// <summary>
 	/// A toolbar manager.
@@ -166,7 +166,11 @@ namespace notes
 			set;
 			get;
 		}
-
+		string BigTexturePath
+		{
+			set;
+			get;
+		}
 		/// <summary>
 		/// The button's tool tip text. Set to null if no tool tip is desired.
 		/// </summary>
@@ -218,6 +222,11 @@ namespace notes
 		{
 			get;
 		}
+		bool IsHovering
+		{
+			get;
+		}
+
 
 		/// <summary>
 		/// Whether this button is currently enabled (clickable) or not. This does not affect the player's ability to
@@ -337,9 +346,9 @@ namespace notes
 		Vector2 Draw(Vector2 position);
 	}
 
-#endregion
+	#endregion
 
-#region events
+	#region events
 
 	/// <summary>
 	/// Event describing a click on a button.
@@ -403,9 +412,9 @@ namespace notes
 	/// <param name="e">An event describing the mouse pointer leaving.</param>
 	public delegate void MouseLeaveHandler(MouseLeaveEvent e);
 
-#endregion
+	#endregion
 
-#region visibility
+	#region visibility
 
 	/// <summary>
 	/// Determines visibility of a button.
@@ -454,9 +463,9 @@ namespace notes
 		}
 	}
 
-#endregion
+	#endregion
 
-#region drawable
+	#region drawable
 
 	/// <summary>
 	/// A drawable that draws a popup menu.
@@ -536,9 +545,9 @@ namespace notes
 		}
 	}
 
-#endregion
+	#endregion
 
-#region private implementations
+	#region private implementations
 
 	public partial class ToolbarManager : IToolbarManager
 	{
@@ -627,6 +636,17 @@ namespace notes
 				return (string)types.button.texturePathProperty.GetValue(realButton, null);
 			}
 		}
+		public string BigTexturePath
+		{
+			set
+			{
+				types.button.bigTexturePathProperty.SetValue(realButton, value, null);
+			}
+			get
+			{
+				return (string)types.button.bigTexturePathProperty.GetValue(realButton, null);
+			}
+		}
 
 		public string ToolTip
 		{
@@ -676,6 +696,13 @@ namespace notes
 			get
 			{
 				return (bool)types.button.effectivelyVisibleProperty.GetValue(realButton, null);
+			}
+		}
+		public bool IsHovering
+		{
+			get
+			{
+				return (bool)types.button.isHoveringProperty.GetValue(realButton, null);
 			}
 		}
 
@@ -861,10 +888,12 @@ namespace notes
 		internal readonly PropertyInfo textProperty;
 		internal readonly PropertyInfo textColorProperty;
 		internal readonly PropertyInfo texturePathProperty;
+		internal readonly PropertyInfo bigTexturePathProperty;
 		internal readonly PropertyInfo toolTipProperty;
 		internal readonly PropertyInfo visibleProperty;
 		internal readonly PropertyInfo visibilityProperty;
 		internal readonly PropertyInfo effectivelyVisibleProperty;
+		internal readonly PropertyInfo isHoveringProperty;
 		internal readonly PropertyInfo enabledProperty;
 		internal readonly PropertyInfo importantProperty;
 		internal readonly PropertyInfo drawableProperty;
@@ -880,10 +909,13 @@ namespace notes
 			textProperty = ToolbarTypes.getProperty(iButtonType, "Text");
 			textColorProperty = ToolbarTypes.getProperty(iButtonType, "TextColor");
 			texturePathProperty = ToolbarTypes.getProperty(iButtonType, "TexturePath");
+			bigTexturePathProperty = ToolbarTypes.getProperty(iButtonType, "BigTexturePath");
 			toolTipProperty = ToolbarTypes.getProperty(iButtonType, "ToolTip");
 			visibleProperty = ToolbarTypes.getProperty(iButtonType, "Visible");
 			visibilityProperty = ToolbarTypes.getProperty(iButtonType, "Visibility");
 			effectivelyVisibleProperty = ToolbarTypes.getProperty(iButtonType, "EffectivelyVisible");
+			isHoveringProperty = ToolbarTypes.getProperty(iButtonType, "IsHovering");
+
 			enabledProperty = ToolbarTypes.getProperty(iButtonType, "Enabled");
 			importantProperty = ToolbarTypes.getProperty(iButtonType, "Important");
 			drawableProperty = ToolbarTypes.getProperty(iButtonType, "Drawable");
@@ -894,7 +926,5 @@ namespace notes
 		}
 	}
 
-#endregion
+	#endregion
 }
-
-#endif

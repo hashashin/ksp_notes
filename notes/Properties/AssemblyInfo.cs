@@ -32,6 +32,6 @@ using System.Runtime.InteropServices;
 // mediante el carácter '*', como se muestra a continuación:
 // [assembly: AssemblyVersion("1.0.*")]
 //[assembly: AssemblyVersion("0.14.1.0")]
-[assembly: AssemblyFileVersion("0.14.1.0")]
+[assembly: AssemblyFileVersion("0.16.0.0")]
 
 [assembly: KSPAssemblyDependency("ToolbarController", 1, 0)]
